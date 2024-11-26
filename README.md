@@ -280,6 +280,29 @@
 <summary>커뮤니티페이지</summary>
 <img src="docs/community/community.gif" width="300">
 
+### 6. 다국어 지원
+
+<table>
+<tr>
+<td align="center">
+<b>한국어</b><br/>
+<img src="docs/languageChange/horong-kr.png" width="200">
+</td>
+<td align="center">
+<b>영어</b><br/>
+<img src="docs/languageChange/horong-en.png" width="200">
+</td>
+<td align="center">
+<b>중국어</b><br/>
+<img src="docs/languageChange/horong-zh.png" width="200">
+</td>
+<td align="center">
+<b>일본어</b><br/>
+<img src="docs/languageChange/horong-jp.png" width="200">
+</td>
+</tr>
+</table>
+
 ## ⚒️ **프로젝트 후기**
 
 ### 👻이하림
