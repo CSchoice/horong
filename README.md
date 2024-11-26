@@ -252,43 +252,33 @@
 
 ### 1. 호롱챗
 
-<details>
   <summary>호롱챗</summary>
   <img src="docs/horongChat/horongchat.gif" width="300">
-</details>
 
 ### 2. 한국어 학습
 
-<details>
   <summary>한국어 학습 페이지</summary>
   <img src="docs/learn/learn1.gif" width="300">
-</details>
-<details>
+
   <summary>지난 기록 보기</summary>
   <img src="docs/learn/learn2.gif" width="300">
-</details>
+
 
 ### 3. 한국 트렌드 / 이슈 숏폼
 
-<details>
 <summary> 한국 트렌드 / 이슈 숏폼 페이지</summary>
 
   <img src="docs/issue/issue.gif" width="300">
-</details>
 
 ### 4. 사설환전소
 
-<details>
 <summary>사설환전소 페이지</summary>
 <img src="docs/exchange/exchange.gif" width="300">
-</details>
 
 ### 5. 커뮤니티
 
-<details>
 <summary>커뮤니티페이지</summary>
 <img src="docs/community/community.gif" width="300">
-</details>
 
 ## ⚒️ **프로젝트 후기**
 
