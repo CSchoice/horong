@@ -6,7 +6,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ssafy.horong.api.CommonResponse;
-import ssafy.horong.common.exception.Board.*;
+import ssafy.horong.common.exception.board.*;
 
 @RestControllerAdvice
 @Slf4j

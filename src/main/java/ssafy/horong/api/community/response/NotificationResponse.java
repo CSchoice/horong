@@ -1,7 +1,7 @@
 package ssafy.horong.api.community.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import ssafy.horong.common.exception.Board.PostNotFoundException;
+import ssafy.horong.common.exception.board.PostNotFoundException;
 import ssafy.horong.domain.community.entity.ContentByLanguage;
 import ssafy.horong.domain.community.entity.Notification;
 import ssafy.horong.domain.community.entity.Post;

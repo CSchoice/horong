@@ -11,7 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 import ssafy.horong.api.community.request.ContentImageRequest;
 import ssafy.horong.api.community.request.CreateContentByLanguageRequest;
 import ssafy.horong.api.community.response.*;
-import ssafy.horong.common.exception.Board.*;
+import ssafy.horong.common.exception.board.*;
 import ssafy.horong.common.util.NotificationUtil;
 import ssafy.horong.common.util.S3Util;
 import ssafy.horong.common.util.SecurityUtil;

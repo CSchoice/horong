@@ -1,4 +1,4 @@
-package ssafy.horong.common.exception.Board;
+package ssafy.horong.common.exception.board;
 
 import ssafy.horong.common.exception.BaseException;
 import ssafy.horong.common.exception.errorcode.CommunityErrorCode;
