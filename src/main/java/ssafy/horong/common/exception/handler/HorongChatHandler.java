@@ -6,16 +6,15 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ssafy.horong.api.CommonResponse;
-import ssafy.horong.common.exception.horongChat.ChatroomNotAuthenticatedException;
-import ssafy.horong.common.exception.s3.ExtensionNotAllowedException;
+import ssafy.horong.common.exception.horongChat.ChatRoomAccessDeniedException;
 
 @Slf4j
 @RestControllerAdvice
 public class HorongChatHandler {
 
-    @ExceptionHandler(ChatroomNotAuthenticatedException.class)
+    @ExceptionHandler(ChatRoomAccessDeniedException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public CommonResponse handleChatroomNotAuthenticatedException(ChatroomNotAuthenticatedException e) {
+    public CommonResponse handleChatroomNotAuthenticatedException(ChatRoomAccessDeniedException e) {
         log.error("handleChatroomNotAuthenticatedException", e);
         return CommonResponse.unauthorized(e.getErrorCode());
     }

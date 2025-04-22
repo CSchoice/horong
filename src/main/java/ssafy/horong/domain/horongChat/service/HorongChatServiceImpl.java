@@ -9,7 +9,7 @@ import ssafy.horong.api.horongChat.response.HorongChatMessageResponse;
 import ssafy.horong.api.horongChat.response.HorongChatRoomListResponse;
 import ssafy.horong.api.horongChat.response.HorongChatRoomResponse;
 import ssafy.horong.common.exception.User.MemberNotFoundException;
-import ssafy.horong.common.exception.horongChat.ChatroomNotAuthenticatedException;
+import ssafy.horong.common.exception.horongChat.ChatRoomAccessDeniedException;
 import ssafy.horong.common.exception.security.NotAuthenticatedException;
 import ssafy.horong.common.util.SecurityUtil;
 import ssafy.horong.domain.horongChat.repository.HorongChatRepository;
@@ -86,7 +86,7 @@ public class HorongChatServiceImpl implements HorongChatService {
                 .orElseThrow();
 
         if (chatRoom.getUser() != getCurrentLoggedInMember()) {
-            throw new ChatroomNotAuthenticatedException();
+            throw new ChatRoomAccessDeniedException();
         }
 
         // 2. 해당 방에 속한 모든 메시지를 ChatContentResponse로 변환
