@@ -554,7 +554,8 @@ public class CommunityServiceImpl implements CommunityService {
 
     public void validatePostCreateRequest(List<CreateContentByLanguageRequest> contents) {
         for (CreateContentByLanguageRequest request : contents) {
-            String safeContent = Jsoup.clean(request.content(), Safelist.none());
+            String rawContent = Optional.ofNullable(request.content()).orElse("");
+            String safeContent = Jsoup.clean(rawContent, Safelist.none());
             String plainText = escapeHtml(safeContent);
 
             if (plainText.length() > 255) {
@@ -562,6 +563,7 @@ public class CommunityServiceImpl implements CommunityService {
             }
         }
     }
+
 
     private String escapeHtml(String input) {
         if (input == null) return null;
