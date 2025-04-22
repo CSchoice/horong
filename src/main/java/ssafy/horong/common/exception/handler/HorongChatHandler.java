@@ -14,7 +14,7 @@ public class HorongChatHandler {
 
     @ExceptionHandler(ChatRoomAccessDeniedException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public CommonResponse handleChatroomNotAuthenticatedException(ChatRoomAccessDeniedException e) {
+    public CommonResponse<Void>handleChatroomNotAuthenticatedException(ChatRoomAccessDeniedException e) {
         log.error("handleChatroomNotAuthenticatedException", e);
         return CommonResponse.unauthorized(e.getErrorCode());
     }

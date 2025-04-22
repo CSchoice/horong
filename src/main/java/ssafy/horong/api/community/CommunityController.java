@@ -18,8 +18,8 @@ import ssafy.horong.api.community.response.*;
 import ssafy.horong.api.health.TestRequest;
 import ssafy.horong.common.util.UserUtil;
 import ssafy.horong.domain.community.entity.BoardType;
-import ssafy.horong.domain.community.entity.ChatRoom;
-import ssafy.horong.domain.community.repository.ChatRoomRepository;
+import ssafy.horong.domain.community.entity.MessageRoom;
+import ssafy.horong.domain.community.repository.MessageRoomRepository;
 import ssafy.horong.domain.community.service.CommunityService;
 
 import java.util.List;
@@ -32,7 +32,7 @@ import java.util.Map;
 @Tag(name = "community", description = "커뮤니티")
 public class CommunityController {
     private final CommunityService communityService;
-    private final ChatRoomRepository chatRoomRepository;
+    private final MessageRoomRepository messageRoomRepository;
     private final UserUtil userUtil;
 
     @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
@@ -41,7 +41,7 @@ public class CommunityController {
         최대 5개의 이미지 파일을 업로드할 수 있으며, 게시판 타입과 함께 게시글을 생성합니다.
 """)
     @PostMapping("")
-    public CommonResponse<?> createPost(@RequestBody @Validated CreatePostRequest request) {
+    public CommonResponse<Void> createPost(@RequestBody @Validated CreatePostRequest request) {
         log.info("권한정보 {}", SecurityContextHolder.getContext().getAuthentication());
         log.info("[CommunityController] 게시글 생성 >>>> request: {}", request);
         communityService.createPost(request.toCommand());
@@ -97,7 +97,7 @@ public class CommunityController {
     @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     @Operation(summary = "댓글 수정", description = "댓글을 수정하는 API입니다.")
     @PatchMapping("/{postId}/comments/{commentId}")
-    public CommonResponse<Void> updateComment(@PathVariable Long commentId, @RequestBody @Validated UpdateCommentRequest request) {
+    public CommonResponse<Void> updateComment(@PathVariable Long postId, @PathVariable Long commentId, @RequestBody @Validated UpdateCommentRequest request) {
         UpdateCommentRequest newRequest = new UpdateCommentRequest(commentId, request.contentByCountries());
         communityService.updateComment(newRequest.toCommand());
         return CommonResponse.ok("댓글이 수정되었습니다.", null);
@@ -106,7 +106,7 @@ public class CommunityController {
     @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     @Operation(summary = "댓글 삭제", description = "댓글을 삭제하는 API입니다.")
     @DeleteMapping("/{postId}/comments/{commentId}")
-    public CommonResponse<Void> deleteComment(@PathVariable Long commentId) {
+    public CommonResponse<Void> deleteComment(@PathVariable Long postId, @PathVariable Long commentId) {
         communityService.deleteComment(commentId);
         return CommonResponse.ok("댓글이 삭제되었습니다.", null);
     }
@@ -134,10 +134,10 @@ public class CommunityController {
 
     @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     @Operation(summary = "메시지 리스트 조회", description = "메시지 리스트를 조회하는 API입니다.")
-    @GetMapping("/messages/{chatroomId}")
-    public CommonResponse<GetPostIdAndMessageListResponse> getMessageList(@PathVariable Long chatroomId) {
-        log.info("[CommunityController] 메시지 리스트 조회 >>>> senderId: {}", chatroomId);
-        GetMessageListRequest request = new GetMessageListRequest(chatroomId);
+    @GetMapping("/messages/{messageroomId}")
+    public CommonResponse<GetPostIdAndMessageListResponse> getMessageList(@PathVariable Long messageroomId) {
+        log.info("[CommunityController] 메시지 리스트 조회 >>>> senderId: {}", messageroomId);
+        GetMessageListRequest request = new GetMessageListRequest(messageroomId);
         GetPostIdAndMessageListResponse messageList = communityService.getMessageList(request.toCommand());
         return CommonResponse.ok(messageList);
     }
@@ -194,7 +194,7 @@ public class CommunityController {
             @RequestParam Long postId,
             @RequestParam Long userId) {
         log.info("[CommunityController] 채팅룸 생성 >>>> request: {}, {}", postId, userId);
-        ChatRoom response = communityService.createChatRoom(userId, postId);
+        MessageRoom response = communityService.createMessageRoom(userId, postId);
         return CommonResponse.ok(response.getId());
     }
 
@@ -205,7 +205,7 @@ public class CommunityController {
             @RequestParam Long postId,
             @RequestParam Long userId) {
         log.info("[CommunityController] 채팅방 존재 여부 확인 >>>> request: {}, {}", postId, userId);
-        Long response = chatRoomRepository.findChatRoomIdByUserAndPost(userUtil.getCurrentUser().getId(), userId, postId).orElse(-1L);
+        Long response = messageRoomRepository.findChatRoomIdByUserAndPost(userUtil.getCurrentUser().getId(), userId, postId).orElse(-1L);
         return CommonResponse.ok(response);
     }
 }

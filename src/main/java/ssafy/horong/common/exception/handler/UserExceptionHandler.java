@@ -13,105 +13,105 @@ import ssafy.horong.common.exception.User.*;
 public class UserExceptionHandler {
     @ExceptionHandler(AbnormalLoginProgressException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public CommonResponse handleAbnormalLoginProgressException(AbnormalLoginProgressException e) {
+    public CommonResponse<Void>handleAbnormalLoginProgressException(AbnormalLoginProgressException e) {
         log.error("AbnormalLoginProgressException Error", e);
         return CommonResponse.internalServerError(e.getErrorCode());
     }
 
     @ExceptionHandler(MemberNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public CommonResponse handleNotFoundMemberException(MemberNotFoundException e) {
+    public CommonResponse<Void>handleNotFoundMemberException(MemberNotFoundException e) {
         log.error("MemberNotFoundException Error", e);
         return CommonResponse.badRequest(e.getErrorCode());
     }
 
     @ExceptionHandler(UserAlreadyDeletedException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
-    public CommonResponse handleMemberAlreadyDeletedException(UserAlreadyDeletedException e) {
+    public CommonResponse<Void>handleMemberAlreadyDeletedException(UserAlreadyDeletedException e) {
         log.error("UserAlreadyDeletedException Error", e);
         return CommonResponse.conflict(e.getErrorCode());
     }
 
     @ExceptionHandler(VerificationException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public CommonResponse handleSmsVerificationException(VerificationException e) {
+    public CommonResponse<Void>handleSmsVerificationException(VerificationException e) {
         log.error("VerificationException Error", e);
         return CommonResponse.badRequest(e.getErrorCode());
     }
 
     @ExceptionHandler(EmailNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public CommonResponse handleEmailNotFoundException(EmailNotFoundException e) {
+    public CommonResponse<Void>handleEmailNotFoundException(EmailNotFoundException e) {
         log.error("EmailNotFoundException Error", e);
         return CommonResponse.badRequest(e.getErrorCode());
     }
 
     @ExceptionHandler(PasswordNotMatchException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public CommonResponse handlePasswordNotMatchException(PasswordNotMatchException e) {
+    public CommonResponse<Void>handlePasswordNotMatchException(PasswordNotMatchException e) {
         log.error("PasswordNotMatchException Error", e);
         return CommonResponse.badRequest(e.getErrorCode());
     }
 
     @ExceptionHandler(UserIdDuplicateException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
-    public CommonResponse handleEmailDuplicateException(UserIdDuplicateException e) {
+    public CommonResponse<Void>handleEmailDuplicateException(UserIdDuplicateException e) {
         log.error("UserIdDuplicateException Error", e);
         return CommonResponse.conflict(e.getErrorCode());
     }
 
     @ExceptionHandler(NickNameDuplicateException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
-    public CommonResponse handleNickNameDuplicateException(NickNameDuplicateException e) {
+    public CommonResponse<Void>handleNickNameDuplicateException(NickNameDuplicateException e) {
         log.error("NickNameDuplicateException Error", e);
         return CommonResponse.conflict(e.getErrorCode());
     }
 
     @ExceptionHandler(PasswordNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public CommonResponse handlePasswordNotValidException(PasswordNotValidException e) {
+    public CommonResponse<Void>handlePasswordNotValidException(PasswordNotValidException e) {
         log.error("PasswordNotValidExeption Error", e);
         return CommonResponse.badRequest(e.getErrorCode());
     }
 
     @ExceptionHandler(UserIdNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public CommonResponse handleUserIdNotValidException(UserIdNotValidException e) {
+    public CommonResponse<Void>handleUserIdNotValidException(UserIdNotValidException e) {
         log.error("UserIdNotValidException Error", e);
         return CommonResponse.badRequest(e.getErrorCode());
     }
 
     @ExceptionHandler(NicknameNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public CommonResponse handleNicknameNotValidException(NicknameNotValidException e) {
+    public CommonResponse<Void>handleNicknameNotValidException(NicknameNotValidException e) {
         log.error("NicknameNotValidExeption Error", e);
         return CommonResponse.badRequest(e.getErrorCode());
     }
 
     @ExceptionHandler(LanguageNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public CommonResponse handleLanguageNotValidException(LanguageNotValidException e) {
+    public CommonResponse<Void>handleLanguageNotValidException(LanguageNotValidException e) {
         log.error("LanguageNotValidExeption Error", e);
         return CommonResponse.badRequest(e.getErrorCode());
     }
 
     @ExceptionHandler(NotAllowedNicknameException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public CommonResponse handleNotAllowedNicknameException(NotAllowedNicknameException e) {
+    public CommonResponse<Void>handleNotAllowedNicknameException(NotAllowedNicknameException e) {
         log.error("NotAllowedNicknameException Error", e);
         return CommonResponse.badRequest(e.getErrorCode());
     }
 
     @ExceptionHandler(NotAllowedUseridException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public CommonResponse handleNotAllowedUseridException(NotAllowedUseridException e) {
+    public CommonResponse<Void>handleNotAllowedUseridException(NotAllowedUseridException e) {
         log.error("NotAllowedUseridException Error", e);
         return CommonResponse.badRequest(e.getErrorCode());
     }
 
     @ExceptionHandler(ForbiddenWordContainedException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
-    public CommonResponse handleForbiddenWordContainedException(ForbiddenWordContainedException e) {
+    public CommonResponse<Void>handleForbiddenWordContainedException(ForbiddenWordContainedException e) {
         log.error("ForbiddenWordContainedException Error", e);
         return CommonResponse.conflict(e.getErrorCode());
     }

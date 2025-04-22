@@ -15,49 +15,49 @@ import ssafy.horong.common.exception.token.TokenTypeNotMatchedException;
 public class AuthExceptionHandler {
     @ExceptionHandler(IssuerTokenIncorrectException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public CommonResponse handleIncorrectIssuerTokenException(IssuerTokenIncorrectException e) {
+    public CommonResponse<Void>handleIncorrectIssuerTokenException(IssuerTokenIncorrectException e) {
         log.error("IssuerTokenIncorrectException", e);
         return CommonResponse.unauthorized(e.getErrorCode());
     }
 
     @ExceptionHandler(TokenExpiredException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public CommonResponse handleExpiredTokenException(TokenExpiredException e) {
+    public CommonResponse<Void>handleExpiredTokenException(TokenExpiredException e) {
         log.error("TokenExpiredException", e);
         return CommonResponse.unauthorized(e.getErrorCode());
     }
 
     @ExceptionHandler(TokenTypeNotMatchedException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public CommonResponse handleNotMatchedTokenTypeException(TokenTypeNotMatchedException e) {
+    public CommonResponse<Void>handleNotMatchedTokenTypeException(TokenTypeNotMatchedException e) {
         log.error("TokenTypeNotMatchedException", e);
         return CommonResponse.unauthorized(e.getErrorCode());
     }
 
     @ExceptionHandler(FilterException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public CommonResponse handleFilterErrorException(FilterException e) {
+    public CommonResponse<Void>handleFilterErrorException(FilterException e) {
         log.error("FilterException", e);
         return CommonResponse.internalServerError(e.getErrorCode());
     }
 
     @ExceptionHandler(AbnormalLoginProgressException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public CommonResponse handleAbnormalLoginProgressException(AbnormalLoginProgressException e) {
+    public CommonResponse<Void>handleAbnormalLoginProgressException(AbnormalLoginProgressException e) {
         log.error("AbnormalLoginProgressException", e);
         return CommonResponse.internalServerError(e.getErrorCode());
     }
 
     @ExceptionHandler(KakaoTokenExpireException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public CommonResponse handleKakaoTokenExpireException(KakaoTokenExpireException e) {
+    public CommonResponse<Void>handleKakaoTokenExpireException(KakaoTokenExpireException e) {
         log.error("KakaoTokenExpireException", e);
         return CommonResponse.internalServerError(e.getErrorCode());
     }
 
     @ExceptionHandler(NotAuthenticatedException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public CommonResponse handleNotAuthenticatedException(NotAuthenticatedException e) {
+    public CommonResponse<Void>handleNotAuthenticatedException(NotAuthenticatedException e) {
         log.error("NotAuthenticatedException", e);
         return CommonResponse.unauthorized(e.getErrorCode());
     }

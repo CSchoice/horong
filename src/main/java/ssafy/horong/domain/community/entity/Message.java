@@ -31,7 +31,7 @@ public class Message {
 
     @ManyToOne
     @JoinColumn(name = "chat_room_id")
-    private ChatRoom chatRoom;
+    private MessageRoom messageRoom;
 
     @PrePersist
     protected void onCreate() {
@@ -49,9 +49,9 @@ public class Message {
 
     // Builder 패턴을 위한 Builder 내부 클래스 정의
     @Builder
-    public Message(List<ContentByLanguage> contentByCountries, User user, ChatRoom chatRoom) {
+    public Message(List<ContentByLanguage> contentByCountries, User user, MessageRoom messageRoom) {
         this.contentByCountries = contentByCountries;
         this.user = user;
-        this.chatRoom = chatRoom;
+        this.messageRoom = messageRoom;
     }
 }

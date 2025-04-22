@@ -1,7 +1,7 @@
 package ssafy.horong.api.community.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import ssafy.horong.common.exception.Board.PostNotFoundException;
+import ssafy.horong.common.exception.board.PostNotFoundException;
 import ssafy.horong.domain.community.entity.ContentByLanguage;
 import ssafy.horong.domain.community.entity.Notification;
 import ssafy.horong.domain.community.entity.Post;
@@ -53,13 +53,13 @@ public record NotificationResponse(
                                 notification.getMessage().getId(),
                                 getMessageContentByLanguage(notification.getMessage(), language),
                                 notification.getType().name(),
-                                notification.getMessage().getChatRoom().getId()
+                                notification.getMessage().getMessageRoom().getId()
                         ) : null,
                         notification.getSender().getId(),
                         notification.getSender().getNickname(),
                         notification.getCreatedAt()
                 ))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private static String getContentByLanguage(Post post, Language language) {

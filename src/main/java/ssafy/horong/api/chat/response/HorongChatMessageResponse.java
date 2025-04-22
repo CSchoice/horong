@@ -1,12 +1,12 @@
 package ssafy.horong.api.chat.response;
 
-import ssafy.horong.domain.chat.entity.HorongChat;
+import ssafy.horong.domain.chat.entity.Chat;
 
 import java.time.LocalDateTime;
 
 public record HorongChatMessageResponse(
         String content,
-        HorongChat.AuthorType authorType,
+        Chat.AuthorType authorType,
         LocalDateTime createdAt
 ) {
 }

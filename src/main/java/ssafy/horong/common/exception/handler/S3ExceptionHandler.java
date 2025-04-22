@@ -14,35 +14,35 @@ public class S3ExceptionHandler {
 
     @ExceptionHandler(ExtensionNotAllowedException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public CommonResponse handleNotAllowedExtension(ExtensionNotAllowedException e) {
+    public CommonResponse<Void>handleNotAllowedExtension(ExtensionNotAllowedException e) {
         log.error("NotAllowedExtension Error", e);
         return CommonResponse.badRequest(e.getErrorCode());
     }
 
     @ExceptionHandler(ImageTooLargeException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public CommonResponse handleImageTooLargeException(ImageTooLargeException e) {
+    public CommonResponse<Void>handleImageTooLargeException(ImageTooLargeException e) {
         log.error("ImageTooLargeException Error", e);
         return CommonResponse.badRequest(e.getErrorCode());
     }
 
     @ExceptionHandler(ProfileNotFoundInS3Exception.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public CommonResponse handleProfileNotFoundInS3Exception(ProfileNotFoundInS3Exception e) {
+    public CommonResponse<Void>handleProfileNotFoundInS3Exception(ProfileNotFoundInS3Exception e) {
         log.error("ProfileNotFoundInS3Exception Error", e);
         return CommonResponse.notFound(e.getErrorCode());
     }
 
     @ExceptionHandler(S3UploadFailedException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public CommonResponse handleImageUploadFailedException(S3UploadFailedException e) {
+    public CommonResponse<Void>handleImageUploadFailedException(S3UploadFailedException e) {
         log.error("S3UploadFailedException Error", e);
         return CommonResponse.badRequest(e.getErrorCode());
     }
 
     @ExceptionHandler(PresignedUrlGenerationFailException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public CommonResponse handlePresignedUrlGenerationFailedException(PresignedUrlGenerationFailException e) {
+    public CommonResponse<Void>handlePresignedUrlGenerationFailedException(PresignedUrlGenerationFailException e) {
         log.error("PresignedUrlGenerationFailException Error", e);
         return CommonResponse.badRequest(e.getErrorCode());
     }

@@ -13,7 +13,7 @@ import ssafy.horong.common.exception.data.DataNotFoundException;
 public class DataExceptionHandler {
     @ExceptionHandler(DataNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public CommonResponse handleDataNotFoundException(DataNotFoundException e) {
+    public CommonResponse<Void>handleDataNotFoundException(DataNotFoundException e) {
         log.error("PDataNotFoundException Error", e);
         return CommonResponse.notFound(e.getErrorCode());
     }
