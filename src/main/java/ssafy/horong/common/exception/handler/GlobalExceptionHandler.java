@@ -14,14 +14,14 @@ import ssafy.horong.common.exception.User.InvalidLoginInfoException;
 public class GlobalExceptionHandler {
     @ExceptionHandler(InvalidLoginInfoException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public CommonResponse handleInvalidLoginInfoException(InvalidLoginInfoException e) {
+    public CommonResponse<Void>handleInvalidLoginInfoException(InvalidLoginInfoException e) {
         log.error("InvalidLoginInfoException Error", e);
         return CommonResponse.unauthorized(e.getErrorCode());
     }
 
     @ExceptionHandler(AccessDeniedRequestException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
-    public CommonResponse handleAccessDeniedRequestException(AccessDeniedRequestException e) {
+    public CommonResponse<Void>handleAccessDeniedRequestException(AccessDeniedRequestException e) {
         log.error("AccessDeniedRequestException Error", e);
         return CommonResponse.forbidden(e.getErrorCode());
     }

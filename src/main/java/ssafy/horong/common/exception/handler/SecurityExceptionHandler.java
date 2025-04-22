@@ -15,21 +15,21 @@ import ssafy.horong.common.exception.security.PasswordUsedException;
 public class SecurityExceptionHandler {
     @ExceptionHandler(InvalidPasswordException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public CommonResponse handleInvalidPasswordException(InvalidPasswordException e) {
+    public CommonResponse<Void>handleInvalidPasswordException(InvalidPasswordException e) {
         log.error("InvalidPasswordException Error", e);
         return CommonResponse.badRequest(e.getErrorCode());
     }
 
     @ExceptionHandler(PasswordUsedException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
-    public CommonResponse handlePasswordUsedException(PasswordUsedException e) {
+    public CommonResponse<Void>handlePasswordUsedException(PasswordUsedException e) {
         log.error("PasswordUsedException Error", e);
         return CommonResponse.conflict(e.getErrorCode());
     }
 
     @ExceptionHandler(AlreadyUsedPasswordException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public CommonResponse handleAlreadyUsedPasswordException(AlreadyUsedPasswordException e) {
+    public CommonResponse<Void>handleAlreadyUsedPasswordException(AlreadyUsedPasswordException e) {
         log.error("AlreadyUsedPasswordException Error", e);
         return CommonResponse.badRequest(e.getErrorCode());
     }
