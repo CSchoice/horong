@@ -442,7 +442,7 @@ public class CommunityServiceImpl implements CommunityService {
     public Map<BoardType, List<GetPostResponse>> getMainPostList() {
         log.info("게시판별 게시글 리스트 조회");
 
-        Map<BoardType, List<GetPostResponse>> mainPostList = new HashMap<>();
+        Map<BoardType, List<GetPostResponse>> mainPostList = new EnumMap<>(BoardType.class);
 
         mainPostList.put(BoardType.NOTICE, getPostsByBoardType(BoardType.NOTICE, 3));
         mainPostList.put(BoardType.FREE, getPostsByBoardType(BoardType.FREE, 6));
