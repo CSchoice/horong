@@ -65,7 +65,7 @@ public class HorongChatServiceImpl implements HorongChatService {
         // 2. 각 채팅방에 속한 메시지들을 가져와서 ChatRoomResponse로 변환
         List<ChatRoomResponse> chatRoomResponses = chatRooms.stream()
                 .map(room -> {
-                    List<ChatContentResponse> chatContents = room.getChats().stream()
+                    List<ChatContentResponse> chatContents = room.getChatMessages().stream()
                             .map(chat -> new ChatContentResponse(
                                     chat.getContent(),
                                     chat.getAuthorType(),
@@ -90,7 +90,7 @@ public class HorongChatServiceImpl implements HorongChatService {
         }
 
         // 2. 해당 방에 속한 모든 메시지를 ChatContentResponse로 변환
-        List<ChatContentResponse> chatContentList = chatRoom.getChats().stream()
+        List<ChatContentResponse> chatContentList = chatRoom.getChatMessages().stream()
                 .map(chat -> new ChatContentResponse(
                         chat.getContent(),
                         chat.getAuthorType(),

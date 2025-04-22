@@ -30,7 +30,7 @@ public class HorongChatRoom {
 
     // 채팅방과 채팅 메시지 간의 관계 설정 (CascadeType.ALL 추가)
     @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<HorongChat> chats = new ArrayList<>();
+    private List<HorongChat> chatMessages = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {
