@@ -659,6 +659,9 @@ public class CommunityServiceImpl implements CommunityService {
                     postDocument.setTitleEn(contentByLanguage.title());
                     postDocument.setContentEn(contentByLanguage.content());
                 }
+                default -> {
+                    throw new IllegalArgumentException("Unsupported language: " + language);
+                }
             }
         });
 
