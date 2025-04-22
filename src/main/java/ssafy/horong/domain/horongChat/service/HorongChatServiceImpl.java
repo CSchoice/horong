@@ -5,9 +5,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ssafy.horong.api.horongChat.request.HorongChatContentRequest;
-import ssafy.horong.api.horongChat.response.ChatContentResponse;
-import ssafy.horong.api.horongChat.response.ChatListResponse;
-import ssafy.horong.api.horongChat.response.ChatRoomResponse;
+import ssafy.horong.api.horongChat.response.HorongChatMessageResponse;
+import ssafy.horong.api.horongChat.response.HorongChatRoomListResponse;
+import ssafy.horong.api.horongChat.response.HorongChatRoomResponse;
 import ssafy.horong.common.exception.User.MemberNotFoundException;
 import ssafy.horong.common.exception.horongChat.ChatroomNotAuthenticatedException;
 import ssafy.horong.common.exception.security.NotAuthenticatedException;
@@ -55,7 +55,7 @@ public class HorongChatServiceImpl implements HorongChatService {
         }
     }
 
-    public ChatListResponse getChatList() {
+    public HorongChatRoomListResponse getChatRoomList() {
         // 현재 로그인한 사용자를 찾음
         User currentUser = getCurrentLoggedInMember();
 
@@ -63,24 +63,24 @@ public class HorongChatServiceImpl implements HorongChatService {
         List<HorongChatRoom> chatRooms = horongChatRoomRepository.findByUser(currentUser);
 
         // 2. 각 채팅방에 속한 메시지들을 가져와서 ChatRoomResponse로 변환
-        List<ChatRoomResponse> chatRoomResponses = chatRooms.stream()
+        List<HorongChatRoomResponse> horongChatRoomRespons = chatRooms.stream()
                 .map(room -> {
-                    List<ChatContentResponse> chatContents = room.getChatMessages().stream()
-                            .map(chat -> new ChatContentResponse(
+                    List<HorongChatMessageResponse> chatContents = room.getChatMessages().stream()
+                            .map(chat -> new HorongChatMessageResponse(
                                     chat.getContent(),
                                     chat.getAuthorType(),
                                     chat.getCreatedAt()
                             ))
                             .toList();
 
-                    return new ChatRoomResponse(room.getId(), chatContents);
+                    return new HorongChatRoomResponse(room.getId(), chatContents);
                 })
                 .toList();
 
-        return new ChatListResponse(chatRoomResponses);
+        return new HorongChatRoomListResponse(horongChatRoomRespons);
     }
 
-    public ChatRoomResponse getChat(Long roomId) {
+    public HorongChatRoomResponse getChatRoom(Long roomId) {
 
         HorongChatRoom chatRoom = horongChatRoomRepository.findById(roomId)
                 .orElseThrow();
@@ -90,15 +90,15 @@ public class HorongChatServiceImpl implements HorongChatService {
         }
 
         // 2. 해당 방에 속한 모든 메시지를 ChatContentResponse로 변환
-        List<ChatContentResponse> chatContentList = chatRoom.getChatMessages().stream()
-                .map(chat -> new ChatContentResponse(
+        List<HorongChatMessageResponse> chatContentList = chatRoom.getChatMessages().stream()
+                .map(chat -> new HorongChatMessageResponse(
                         chat.getContent(),
                         chat.getAuthorType(),
                         chat.getCreatedAt()
                 ))
                 .toList();
 
-        return new ChatRoomResponse(roomId, chatContentList);  // 응답 반환
+        return new HorongChatRoomResponse(roomId, chatContentList);  // 응답 반환
     }
 
     private User getCurrentLoggedInMember() {

@@ -8,8 +8,8 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ssafy.horong.api.CommonResponse;
 import ssafy.horong.api.horongChat.request.SaveChatLogRequest;
-import ssafy.horong.api.horongChat.response.ChatListResponse;
-import ssafy.horong.api.horongChat.response.ChatRoomResponse;
+import ssafy.horong.api.horongChat.response.HorongChatRoomListResponse;
+import ssafy.horong.api.horongChat.response.HorongChatRoomResponse;
 import ssafy.horong.domain.horongChat.service.HorongChatService;
 
 @Slf4j
@@ -30,16 +30,16 @@ public class HorongChatController {
     @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     @Operation(summary = "채팅 목록을 조회하는 API", description = "채팅 목록을 조회하는 API입니다.")
     @GetMapping("")
-    public CommonResponse<ChatListResponse> getChatList() {
-        ChatListResponse response = horongChatService.getChatList();
+    public CommonResponse<HorongChatRoomListResponse> getChatRoomList() {
+        HorongChatRoomListResponse response = horongChatService.getChatRoomList();
         return CommonResponse.ok(response);
     }
 
     @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     @Operation(summary = "채팅방을 조회하는 API", description = "채팅방을 조회하는 API입니다.")
     @GetMapping("/{roomId}")
-    public CommonResponse<ChatRoomResponse> getChat(@PathVariable Long roomId) {
-        ChatRoomResponse response = horongChatService.getChat(roomId);
+    public CommonResponse<HorongChatRoomResponse> getChatRoom(@PathVariable Long roomId) {
+        HorongChatRoomResponse response = horongChatService.getChatRoom(roomId);
         return CommonResponse.ok(response);
     }
 }
