@@ -817,9 +817,7 @@ public class CommunityServiceImpl implements CommunityService {
 
 
     private List<Notification> getCombinedNotifications(User receiver) {
-        // 사용자의 읽지 않은 모든 알림을 가져옵니다.
-        List<Notification> unreadNotifications = notificationRepository.findByReceiverAndIsReadFalse(receiver);
-        return unreadNotifications;
+        return notificationRepository.findByReceiverAndIsReadFalse(receiver);
     }
 
     private String getContentByLanguage(Post post, Language language, ContentByLanguage.ContentType contentType) {
