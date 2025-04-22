@@ -13,12 +13,11 @@ import ssafy.horong.common.properties.WebClientProperties;
 import ssafy.horong.common.util.S3Util;
 import ssafy.horong.common.util.SecurityUtil;
 import ssafy.horong.common.util.UserUtil;
-import ssafy.horong.domain.education.command.SaveEduciatonRecordCommand;
+import ssafy.horong.domain.education.command.SaveEducationRecordCommand;
 import ssafy.horong.domain.education.entity.*;
 import ssafy.horong.domain.education.repository.*;
 import ssafy.horong.domain.member.common.Language;
 import ssafy.horong.domain.member.entity.User;
-import ssafy.horong.domain.member.repository.UserRepository;
 
 import java.net.URI;
 import java.time.LocalDate;
@@ -185,7 +184,7 @@ public class EducationServiceImpl implements EducationService {
     }
 
     @Transactional
-    public EducationRecordResponse saveEducationRecord(SaveEduciatonRecordCommand command) {
+    public EducationRecordResponse saveEducationRecord(SaveEducationRecordCommand command) {
         Education education = educationRepository.findByWord(command.word());
         List<Education> findAll = educationRepository.findAll();
         log.info("교육 목록: {}", findAll);

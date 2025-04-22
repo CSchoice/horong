@@ -1,10 +1,9 @@
-package ssafy.horong.api.CurrencyExchange.response;
+package ssafy.horong.api.currencyExchange.response;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Builder;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;

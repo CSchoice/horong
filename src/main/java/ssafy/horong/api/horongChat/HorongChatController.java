@@ -16,7 +16,7 @@ import ssafy.horong.domain.horongChat.service.HorongChatService;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/chat")
-public class horongChatConrtoller {
+public class HorongChatController {
     private final HorongChatService horongChatService;
 
     @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")

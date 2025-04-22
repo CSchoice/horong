@@ -3,7 +3,7 @@ package ssafy.horong.domain.currencyExchange.common;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import ssafy.horong.api.CurrencyExchange.response.CurrencyExchangeResponse;
+import ssafy.horong.api.currencyExchange.response.CurrencyExchangeResponse;
 
 import java.io.Serializable;
 import java.util.List;

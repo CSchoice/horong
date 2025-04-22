@@ -558,7 +558,7 @@ public class CommunityServiceImpl implements CommunityService {
             String plainText = escapeHtml(safeContent);
 
             if (plainText.length() > 255) {
-                throw new ContentTooLongExeption();
+                throw new ContentTooLongException();
             }
         }
     }
@@ -592,7 +592,7 @@ public class CommunityServiceImpl implements CommunityService {
     private void validateAdminForNotice(BoardType boardType) {
         if (boardType == BoardType.NOTICE &&
                 SecurityUtil.getLoginMemberRole().orElse(MemberRole.USER) != MemberRole.ADMIN) {
-            throw new NotAdminExeption();
+            throw new NotAdminException();
         }
     }
 

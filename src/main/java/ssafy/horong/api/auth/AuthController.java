@@ -17,7 +17,7 @@ import ssafy.horong.domain.auth.service.AuthService;
 @RequiredArgsConstructor
 @RequestMapping("/auth")
 @Tag(name = "Auth", description = "인증")
-public class authController {
+public class AuthController {
 
     private final AuthService authService;
 

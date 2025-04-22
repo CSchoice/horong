@@ -10,7 +10,7 @@ import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.presigner.S3Presigner;
 import software.amazon.awssdk.services.s3.presigner.model.GetObjectPresignRequest;
 import software.amazon.awssdk.services.s3.presigner.model.PresignedGetObjectRequest;
-import ssafy.horong.common.constant.global.S3_IMAGE;
+import ssafy.horong.common.constant.global.S3Image;
 import ssafy.horong.common.exception.s3.ExtensionNotAllowedException;
 import ssafy.horong.common.exception.s3.PresignedUrlGenerationFailException;
 import ssafy.horong.common.exception.s3.S3UploadFailedException;
@@ -76,7 +76,7 @@ public class S3Util {
 
     public String uploadUserImageToS3(MultipartFile imageFile, Long userId, String location, String existingImageUrl) {
         if (imageFile == null || imageFile.isEmpty()) {
-            return existingImageUrl != null && !existingImageUrl.isEmpty() ? existingImageUrl : S3_IMAGE.DEFAULT_URL;
+            return existingImageUrl != null && !existingImageUrl.isEmpty() ? existingImageUrl : S3Image.DEFAULT_URL;
         }
 
         try {

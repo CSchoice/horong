@@ -67,9 +67,9 @@ public class UserExceptionHandler {
         return CommonResponse.conflict(e.getErrorCode());
     }
 
-    @ExceptionHandler(PasswordNotValidExeption.class)
+    @ExceptionHandler(PasswordNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public CommonResponse handlePasswordNotValidExeption(PasswordNotValidExeption e) {
+    public CommonResponse handlePasswordNotValidException(PasswordNotValidException e) {
         log.error("PasswordNotValidExeption Error", e);
         return CommonResponse.badRequest(e.getErrorCode());
     }
@@ -81,16 +81,16 @@ public class UserExceptionHandler {
         return CommonResponse.badRequest(e.getErrorCode());
     }
 
-    @ExceptionHandler(NicknameNotValidExeption.class)
+    @ExceptionHandler(NicknameNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public CommonResponse handleNicknameNotValidExeption(NicknameNotValidExeption e) {
+    public CommonResponse handleNicknameNotValidException(NicknameNotValidException e) {
         log.error("NicknameNotValidExeption Error", e);
         return CommonResponse.badRequest(e.getErrorCode());
     }
 
-    @ExceptionHandler(LanguageNotValidExeption.class)
+    @ExceptionHandler(LanguageNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public CommonResponse handleLanguageNotValidExeption(LanguageNotValidExeption e) {
+    public CommonResponse handleLanguageNotValidException(LanguageNotValidException e) {
         log.error("LanguageNotValidExeption Error", e);
         return CommonResponse.badRequest(e.getErrorCode());
     }

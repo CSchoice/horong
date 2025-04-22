@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import ssafy.horong.api.CurrencyExchange.response.CurrencyExchangeResponse;
+import ssafy.horong.api.currencyExchange.response.CurrencyExchangeResponse;
 import ssafy.horong.domain.currencyExchange.entity.CurrencyExchange;
 import ssafy.horong.domain.currencyExchange.repository.CurrencyExchangeRepository;
 
