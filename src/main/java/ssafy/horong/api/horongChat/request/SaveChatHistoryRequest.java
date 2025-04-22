@@ -5,7 +5,7 @@ import ssafy.horong.domain.horongChat.command.SaveChatLogCommand;
 
 import java.util.List;
 
-public record SaveChatLogRequest(
+public record SaveChatHistoryRequest(
         @Schema(
                 description = "채팅 리스트입니다",
                 example = "[{\"content\": \"채팅 내용입니다.\", \"authorType\": \"USER\"}, {\"content\": \"다른 채팅 내용입니다.\", \"authorType\": \"BOT\"}]"
