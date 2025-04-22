@@ -92,7 +92,7 @@ public class HealthController {
     }
 
     @PostMapping(value = "/audio", consumes = {"multipart/form-data"})
-    public CommonResponse<URI> uploadAudio(@ModelAttribute @Validated mp3TestRequest request) {
+    public CommonResponse<URI> uploadAudio(@ModelAttribute @Validated Mp3TestRequest request) {
 
         MultipartFile audioFile = request.mp3(); // 파일을 가져옴
         log.info("Received file: {}", audioFile.getOriginalFilename());

@@ -7,7 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ssafy.horong.api.CommonResponse;
-import ssafy.horong.api.education.request.SaveEduciatonRecordRequest;
+import ssafy.horong.api.education.request.SaveEducationRecordRequest;
 import ssafy.horong.api.education.response.TodayWordsResponse;
 import ssafy.horong.domain.education.service.EducationService;
 
@@ -33,7 +33,7 @@ public class EducationController {
 
     @Operation(summary = "한국어 학습 기록", description = "한국어 학습 기록을 저장하는 API입니다.")
     @PostMapping(value = "/record", consumes = { "multipart/form-data" })
-    public CommonResponse<?> saveEducationRecord(@ModelAttribute @Validated SaveEduciatonRecordRequest request) {
+    public CommonResponse<?> saveEducationRecord(@ModelAttribute @Validated SaveEducationRecordRequest request) {
         return CommonResponse.ok(educationService.saveEducationRecord(request.toCommand()));
     }
 

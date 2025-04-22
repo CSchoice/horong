@@ -7,7 +7,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ssafy.horong.api.member.response.*;
-import ssafy.horong.common.constant.global.S3_IMAGE;
+import ssafy.horong.common.constant.global.S3Image;
 import ssafy.horong.common.exception.User.UserIdDuplicateException;
 import ssafy.horong.common.exception.User.PasswordNotMatchException;
 import ssafy.horong.common.exception.security.InvalidPasswordException;
@@ -30,7 +30,6 @@ import ssafy.horong.domain.member.repository.PasswordHistoryRepository;
 import ssafy.horong.domain.member.repository.UserRepository;
 import ssafy.horong.common.exception.User.*;
 
-import java.net.URL;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -82,7 +81,7 @@ public class UserServiceImpl implements UserService {
         log.info("[Timing] 유저 저장 소요 시간: {} ms", afterUserSave - afterUserCreation);
 
         // 4. 프로필 이미지 처리
-        String imageUrl = S3_IMAGE.DEFAULT_URL;
+        String imageUrl = S3Image.DEFAULT_URL;
         userToSave.setProfileImg(imageUrl);
         userRepository.save(userToSave); // 프로필 이미지 업데이트 후 다시 저장
         long afterProfileImage = System.currentTimeMillis();
@@ -343,13 +342,13 @@ public class UserServiceImpl implements UserService {
             throw new ForbiddenWordContainedException();
         }
         if (command.password().length() < 8 || command.password().length() > 20) {
-            throw new PasswordNotValidExeption();
+            throw new PasswordNotValidException();
         }
         if (!command.password().matches(".*[!@#$%^&*].*")) {
             throw new InvalidPasswordException();
         }
         if (command.nickname().length() < 2 || command.nickname().length() > 20) {
-            throw new NicknameNotValidExeption();
+            throw new NicknameNotValidException();
         }
         if (!command.nickname().matches("^[a-zA-Z0-9가-힣一-亜\u4e00-\u9fa5]+$")) {
             throw new NotAllowedNicknameException();
@@ -358,7 +357,7 @@ public class UserServiceImpl implements UserService {
             throw new ForbiddenWordContainedException();
         }
         if (!isValidLanguage(command.language())) {
-            throw new LanguageNotValidExeption();
+            throw new LanguageNotValidException();
         }
         if (isDuplicateUserId(command.userId())) {
             throw new UserIdDuplicateException();
@@ -372,7 +371,7 @@ public class UserServiceImpl implements UserService {
         Set<String> forbiddenWords = redisTemplateslang.opsForSet().members(FORBIDDEN_WORDS_KEY);
         if (command.nickname() != null) {
             if (command.nickname().length() < 2 || command.nickname().length() > 20) {
-                throw new NicknameNotValidExeption();
+                throw new NicknameNotValidException();
             }
             if (isDuplicateNickname(command.nickname())) {
                 throw new NickNameDuplicateException();

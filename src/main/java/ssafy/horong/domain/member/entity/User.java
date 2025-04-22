@@ -2,7 +2,7 @@ package ssafy.horong.domain.member.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import ssafy.horong.common.constant.global.S3_IMAGE;
+import ssafy.horong.common.constant.global.S3Image;
 import ssafy.horong.domain.community.entity.Post;
 import ssafy.horong.domain.member.command.MemberSignupCommand;
 import ssafy.horong.domain.member.common.Language;
@@ -94,7 +94,7 @@ public class User {
     @PrePersist
     public void prePersist() {
         if (profileImg == null) {
-            profileImg = S3_IMAGE.DEFAULT_URL;
+            profileImg = S3Image.DEFAULT_URL;
         }
         createdAt = LocalDateTime.now();
     }

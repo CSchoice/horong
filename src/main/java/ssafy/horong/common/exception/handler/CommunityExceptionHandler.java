@@ -12,9 +12,9 @@ import ssafy.horong.common.exception.Board.*;
 @Slf4j
 public class CommunityExceptionHandler {
 
-    @ExceptionHandler(NotAdminExeption.class)
+    @ExceptionHandler(NotAdminException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public CommonResponse handleNotAdminExeption(NotAdminExeption e) {
+    public CommonResponse handleNotAdminException(NotAdminException e) {
         log.error("NotAdminExeption", e);
         return CommonResponse.unauthorized(e.getErrorCode());
     }
@@ -26,9 +26,9 @@ public class CommunityExceptionHandler {
         return CommonResponse.unauthorized(e.getErrorCode());
     }
 
-    @ExceptionHandler(ContentTooLongExeption.class)
+    @ExceptionHandler(ContentTooLongException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public CommonResponse handleContentTooLongExeption(ContentTooLongExeption e) {
+    public CommonResponse handleContentTooLongException(ContentTooLongException e) {
         log.error("ContentTooLongExeption", e);
         return CommonResponse.badRequest(e.getErrorCode());
     }
