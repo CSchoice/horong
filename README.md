@@ -2,8 +2,6 @@
 
 <img src="docs/logos/service_logo.png" alt="따다" width="230" />
 
-- 배포 URL : https://horong.kr
-
 ## 📅 **프로젝트 기간**
 
 - 2024.10.14 ~ 2024.11.18
