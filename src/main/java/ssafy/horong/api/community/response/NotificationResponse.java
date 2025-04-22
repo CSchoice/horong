@@ -59,7 +59,7 @@ public record NotificationResponse(
                         notification.getSender().getNickname(),
                         notification.getCreatedAt()
                 ))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private static String getContentByLanguage(Post post, Language language) {
