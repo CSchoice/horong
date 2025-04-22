@@ -16,7 +16,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-public class HorongChatRoom {
+public class ChatRoom {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -30,7 +30,7 @@ public class HorongChatRoom {
 
     // 채팅방과 채팅 메시지 간의 관계 설정 (CascadeType.ALL 추가)
     @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<HorongChat> chatMessages = new ArrayList<>();
+    private List<Chat> chatMessages = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {

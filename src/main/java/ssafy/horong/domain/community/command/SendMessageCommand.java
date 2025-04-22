@@ -6,7 +6,7 @@ import ssafy.horong.api.community.request.CreateContentByLanguageRequest;
 import java.util.List;
 
 public record SendMessageCommand(
-        Long chatRoomId,
+        Long messageRoomId,
         List<CreateContentByLanguageRequest> contentsByLanguages,
         List<ContentImageRequest> contentImageRequest
 ) {

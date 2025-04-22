@@ -4,6 +4,6 @@ import ssafy.horong.api.currency.response.CurrencyExchangeResponse;
 
 import java.util.List;
 
-public interface CurrencyExchangeService {
+public interface CurrencyService {
     List<CurrencyExchangeResponse> getCurrencyExchangeList();
 }

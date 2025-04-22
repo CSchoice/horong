@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Setter
-public class HorongChat {
+public class Chat {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -25,7 +25,7 @@ public class HorongChat {
 
     @ManyToOne
     @JoinColumn(name = "room_id")
-    private HorongChatRoom room;
+    private ChatRoom room;
 
     @Column(nullable = false)
     private LocalDateTime createdAt;

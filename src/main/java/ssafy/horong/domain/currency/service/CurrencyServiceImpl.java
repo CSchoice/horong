@@ -18,7 +18,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class CurrencyExchangeServiceImpl implements CurrencyExchangeService {
+public class CurrencyServiceImpl implements CurrencyService {
 
     private final CurrencyExchangeRepository currencyExchangeRepository;
     private final RedisTemplate<String, Object> redisTemplate;

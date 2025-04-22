@@ -53,7 +53,7 @@ public record NotificationResponse(
                                 notification.getMessage().getId(),
                                 getMessageContentByLanguage(notification.getMessage(), language),
                                 notification.getType().name(),
-                                notification.getMessage().getChatRoom().getId()
+                                notification.getMessage().getMessageRoom().getId()
                         ) : null,
                         notification.getSender().getId(),
                         notification.getSender().getNickname(),

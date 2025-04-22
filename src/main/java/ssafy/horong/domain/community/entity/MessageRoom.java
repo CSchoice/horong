@@ -12,7 +12,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ChatRoom {
+public class MessageRoom {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -28,7 +28,7 @@ public class ChatRoom {
     @JoinColumn(name = "guest_id", nullable = false)
     private User guest;
 
-    @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "messageRoom", cascade = CascadeType.ALL)
     private List<Message> messages;
 
     /**

@@ -50,7 +50,7 @@ public class CommunityServiceImpl implements CommunityService {
     private final S3Util s3Util;
     private final ContentImageRepository contentImageRepository;
     private final ContentByCountryRepository contentByLanguageRepository;
-    private final ChatRoomRepository chatRoomRepository;
+    private final MessageRoomRepository messageRoomRepository;
     private final UserUtil userUtil;
 
     @Transactional
@@ -181,14 +181,14 @@ public class CommunityServiceImpl implements CommunityService {
 
     @Transactional
     @Override
-    public ChatRoom createChatRoom(Long userId, Long postId) {
-        ChatRoom chatRoom = ChatRoom.builder()
+    public MessageRoom createMessageRoom(Long userId, Long postId) {
+        MessageRoom messageRoom = MessageRoom.builder()
                 .host(userUtil.getCurrentUser())
                 .post(postRepository.findById(postId).orElseThrow(PostNotFoundException::new))
                 .guest(userRepository.findById(userId).orElseThrow(null))
                 .build();
-        chatRoomRepository.save(chatRoom);
-        return chatRoom;
+        messageRoomRepository.save(messageRoom);
+        return messageRoom;
     }
 
     @Transactional
@@ -227,7 +227,7 @@ public class CommunityServiceImpl implements CommunityService {
 
         // 메시지 객체 생성 및 저장
         Message message = Message.builder()
-                .chatRoom(chatRoomRepository.findById(command.chatRoomId()).orElseThrow(ChatRoomNotFoundException::new))
+                .messageRoom(messageRoomRepository.findById(command.messageRoomId()).orElseThrow(MessageRoomNotFoundException::new))
                 .contentByCountries(contentByCountries)
                 .user(userUtil.getCurrentUser())
                 .build();
@@ -237,7 +237,7 @@ public class CommunityServiceImpl implements CommunityService {
         messageRepository.save(message);
 
         // 수신자에게 알림 전송
-        User receiver = message.getChatRoom().getOpponent(userUtil.getCurrentUser());
+        User receiver = message.getMessageRoom().getOpponent(userUtil.getCurrentUser());
         if (command.contentsByLanguages() != null) {
             notifyByMessageUser(receiver, "메시지가 도착했습니다: " + command.contentsByLanguages().get(0).content(), Notification.NotificationType.MESSAGE, message);
             log.info("메시지 전송: {}", receiver.getNickname());
@@ -248,15 +248,15 @@ public class CommunityServiceImpl implements CommunityService {
 
     @Override
     public List<GetAllMessageListResponse> getAllMessageList() {
-        List<ChatRoom> chatRooms = chatRoomRepository.findAllByUser(userUtil.getCurrentUser());
-        log.info("모든 채팅방 조회: {}", chatRooms);
+        List<MessageRoom> messageRooms = messageRoomRepository.findAllByUser(userUtil.getCurrentUser());
+        log.info("모든 채팅방 조회: {}", messageRooms);
 
-        return chatRooms.stream()
-                .map(chatRoom -> {
-                    User opponent = chatRoom.getOpponent(userUtil.getCurrentUser());
-                    List<Message> messages = chatRoom.getMessages();
+        return messageRooms.stream()
+                .map(messageRoom -> {
+                    User opponent = messageRoom.getOpponent(userUtil.getCurrentUser());
+                    List<Message> messages = messageRoom.getMessages();
 
-                    long unreadCount = messageRepository.countUnreadMessagesForOpponent(chatRoom, userUtil.getCurrentUser());
+                    long unreadCount = messageRepository.countUnreadMessagesForOpponent(messageRoom, userUtil.getCurrentUser());
 
                     messages.sort(Comparator.comparing(Message::getCreatedAt).reversed());
 
@@ -264,14 +264,14 @@ public class CommunityServiceImpl implements CommunityService {
                     String lastContent = getContentByLanguage(lastMessage.getContentByCountries(), userUtil.getCurrentUser().getLanguage());
 
                     return new GetAllMessageListResponse(
-                            chatRoom.getId(),
+                            messageRoom.getId(),
                             unreadCount,
                             lastContent,
                             opponent.getNickname(),
                             opponent.getId(),
                             s3Util.getProfilePresignedUrlFromS3(opponent.getProfileImg()),
                             lastMessage.getCreatedAt().toString(),
-                            chatRoom.getPost().getId()
+                            messageRoom.getPost().getId()
                     );
                 })
                 .sorted(Comparator.comparing(GetAllMessageListResponse::createdAt).reversed())
@@ -281,8 +281,8 @@ public class CommunityServiceImpl implements CommunityService {
     @Transactional
     @Override
     public GetPostIdAndMessageListResponse getMessageList(GetMessageListCommand command) {
-        List<Message> messages = messageRepository.findAllByChatRoomId(command.roomId());
-        Long postId = chatRoomRepository.findPostIdByChatRoomId(command.roomId());
+        List<Message> messages = messageRepository.findAllByMessageRoomId(command.roomId());
+        Long postId = messageRoomRepository.findPostIdByMessageRoomId(command.roomId());
         User user = userUtil.getCurrentUser();
         Language userLanguage = user.getLanguage();
 
@@ -312,7 +312,7 @@ public class CommunityServiceImpl implements CommunityService {
                 })
                 .toList();
 
-        Long opponent = messageRepository.findOpponentIdByChatRoomIdAndUserId(command.roomId(), user.getId());
+        Long opponent = messageRepository.findOpponentIdByMessageRoomIdAndUserId(command.roomId(), user.getId());
 
         return GetPostIdAndMessageListResponse.of(postId, opponent, messageList);
     }

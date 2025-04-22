@@ -54,9 +54,9 @@ public class CommunityExceptionHandler {
         return CommonResponse.notFound(e.getErrorCode());
     }
 
-    @ExceptionHandler(ChatRoomNotFoundException.class)
+    @ExceptionHandler(MessageRoomNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public CommonResponse handleChatRoomNotFoundException(ChatRoomNotFoundException e) {
+    public CommonResponse handleChatRoomNotFoundException(MessageRoomNotFoundException e) {
         log.error("ChatRoomNotFoundException", e);
         return CommonResponse.notFound(e.getErrorCode());
     }
