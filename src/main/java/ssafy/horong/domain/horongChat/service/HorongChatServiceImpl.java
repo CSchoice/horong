@@ -34,9 +34,7 @@ public class HorongChatServiceImpl implements HorongChatService {
     public void saveChatLog(SaveChatLogCommand command) {
 
         // 현재 로그인한 사용자 찾기
-        User currentUser = SecurityUtil.getLoginMemberId()
-                .flatMap(userRepository::findById)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        User currentUser = getCurrentLoggedInMember();
 
         // 1. 새로운 채팅방 생성
         HorongChatRoom chatRoom = HorongChatRoom.builder()
