@@ -3,6 +3,7 @@ package ssafy.horong.domain.member.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import ssafy.horong.common.constant.global.S3Image;
+import ssafy.horong.common.crypto.StringEncryptConverter;
 import ssafy.horong.domain.community.entity.Post;
 import ssafy.horong.domain.member.command.MemberSignupCommand;
 import ssafy.horong.domain.member.common.Language;
@@ -23,7 +24,8 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 16)
+    @Convert(converter = StringEncryptConverter.class)
+    @Column(nullable = false, length = 255)  // 암호화 후 크기가 커질 수 있으므로 길이 조정
     private String userId;
 
     @Column(nullable = false, length = 20)
