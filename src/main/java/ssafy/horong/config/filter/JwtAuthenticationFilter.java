@@ -4,6 +4,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -19,6 +20,7 @@ import ssafy.horong.common.exception.security.TokenExpiredException;
 import ssafy.horong.common.exception.security.InvalidSignatureTokenException;
 import ssafy.horong.common.exception.security.InvalidTokenException;
 import ssafy.horong.common.exception.token.TokenTypeNotMatchedException;
+import ssafy.horong.common.model.ErrorResponse;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -26,6 +28,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static ssafy.horong.common.constant.redis.KEY_PREFIX.ACCESS_TOKEN;
+import static ssafy.horong.common.constant.redis.KEY_PREFIX.REFRESH_TOKEN;
 
 @Component
 @RequiredArgsConstructor
@@ -33,6 +36,7 @@ import static ssafy.horong.common.constant.redis.KEY_PREFIX.ACCESS_TOKEN;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtProcessor jwtProcessor;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
@@ -91,6 +95,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private void setErrorResponse(HttpServletResponse response, int statusCode, String message) throws IOException {
         response.setStatus(statusCode);
         response.setContentType("application/json");
-        response.getWriter().write("{ \"error\": \"" + statusCode + "\", \"message\": \"" + message + "\" }");
+        ErrorResponse errorResponse = new ErrorResponse(statusCode, message);
+        objectMapper.writeValue(response.getWriter(), errorResponse);
     }
 }

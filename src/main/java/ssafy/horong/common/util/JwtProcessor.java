@@ -1,6 +1,7 @@
 package ssafy.horong.common.util;
 
 import io.jsonwebtoken.*;
+import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
 import lombok.RequiredArgsConstructor;
@@ -21,18 +22,35 @@ import ssafy.horong.domain.redis.RefreshTokenRedisRepository;
 import javax.crypto.SecretKey;
 import java.security.Key;
 import java.util.Date;
+import java.util.Set;
 
 import static ssafy.horong.common.constant.redis.KEY_PREFIX.ACCESS_TOKEN;
 import static ssafy.horong.common.constant.redis.KEY_PREFIX.REFRESH_TOKEN;
 
-@RequiredArgsConstructor
 @Component
 @Slf4j
 public class JwtProcessor {
+    
+    public JwtProcessor(JwtProperties jwtProperties, 
+                      BlacklistTokenRedisRepository blacklistTokenRedisRepository, 
+                      RefreshTokenRedisRepository refreshTokenRedisRepository) {
+        this.jwtProperties = jwtProperties;
+        this.blacklistTokenRedisRepository = blacklistTokenRedisRepository;
+        this.refreshTokenRedisRepository = refreshTokenRedisRepository;
+        initJwtParser();
+    }
+    
+    private void initJwtParser() {
+        this.jwtParser = Jwts.parser()
+                .verifyWith((SecretKey) getSecretKey())
+                .build();
+        log.debug("JWT Parser initialized");
+    }
 
     private final JwtProperties jwtProperties;
-    private final BlacklistTokenRedisRepository blacklistTokenRedisRepository;
-    private final RefreshTokenRedisRepository refreshTokenRedisRepository;
+private final BlacklistTokenRedisRepository blacklistTokenRedisRepository;
+private final RefreshTokenRedisRepository refreshTokenRedisRepository;
+private JwtParser jwtParser;
 
     public Key getSecretKey() {
         return Keys.hmacShaKeyFor(jwtProperties.secretKey().getBytes());
@@ -44,10 +62,7 @@ public class JwtProcessor {
             throw new TokenExpiredException();
         }
         try {
-            return Jwts.parser()
-                    .verifyWith((SecretKey) getSecretKey())
-                    .build()
-                    .parseSignedClaims(token);
+            return jwtParser.parseSignedClaims(token);
         } catch (SignatureException e) {
             throw new InvalidSignatureTokenException();
         } catch (ExpiredJwtException e) {
@@ -57,17 +72,18 @@ public class JwtProcessor {
         }
     }
 
-    public void saveRefreshToken(String accessToken, String refreshToken) {
-        refreshTokenRedisRepository.save(accessToken, refreshToken);
+    public void saveRefreshToken(String refreshToken, Long userId) {
+        refreshTokenRedisRepository.save(refreshToken, userId.toString());
     }
 
-    public void saveRefreshToken(LoginToken tokens) {
-        refreshTokenRedisRepository.save(tokens.accessToken(), tokens.refreshToken());
+    public void saveRefreshToken(LoginToken tokens, User user) {
+        refreshTokenRedisRepository.save(tokens.refreshToken(), user.getId().toString());
     }
 
-    public String findRefreshTokenById(String accessToken) {
-        return refreshTokenRedisRepository.findById(accessToken)
+    public Long findUserIdByRefreshToken(String refreshToken) {
+        String userId = refreshTokenRedisRepository.findById(refreshToken)
                 .orElseThrow(InvalidTokenException::new);
+        return Long.valueOf(userId);
     }
 
     public void renewRefreshToken(String oldRefreshToken, String newRefreshToken, User member) {
@@ -75,15 +91,38 @@ public class JwtProcessor {
         expireToken(oldRefreshToken);
     }
 
-    public void expireToken(String accessToken) {
-        String refreshToken = getRefreshToken(accessToken);
+    public void expireToken(String refreshToken) {
         if (refreshToken == null) {
-            log.info("리프레시 토큰을 찾지 못해 토큰 만료 처리 건너뜀: {}", accessToken);
+            log.info("리프레시 토큰이 null이어서 토큰 만료 처리 건너뜀");
             return;
         }
         blacklistTokenRedisRepository.save(refreshToken, getRemainingTime(refreshToken));
         refreshTokenRedisRepository.delete(refreshToken);
         log.info("Token added to blacklist: {}", refreshToken);
+    }
+    
+    /**
+     * 사용자 ID로 모든 리프레시 토큰을 만료시킵니다.
+     * @param userId 사용자 ID
+     * @return 만료된 토큰 수
+     */
+    public int expireAllUserTokens(Long userId) {
+        Set<String> userTokens = refreshTokenRedisRepository.findKeysByValue(userId.toString());
+        int count = 0;
+        
+        for (String token : userTokens) {
+            try {
+                blacklistTokenRedisRepository.save(token, getRemainingTime(token));
+                refreshTokenRedisRepository.delete(token);
+                count++;
+                log.info("Expired token for user {}: {}", userId, token);
+            } catch (Exception e) {
+                log.error("Error expiring token for user {}: {}", userId, e.getMessage());
+            }
+        }
+        
+        log.info("Expired {} tokens for user {}", count, userId);
+        return count;
     }
 
     public long getRemainingTime(String token) {
@@ -94,11 +133,19 @@ public class JwtProcessor {
     }
 
     public boolean isTokenExpired(String token) {
-        Boolean result = blacklistTokenRedisRepository.hasKey(token);
-        if (result != null) {
-            return result;
+        Boolean blacklisted = blacklistTokenRedisRepository.hasKey(token);
+        if (Boolean.TRUE.equals(blacklisted)) {
+            return true;
         }
-        return getClaim(token).getPayload().getExpiration().before(new Date());
+        try {
+            Claims claims = jwtParser.parseSignedClaims(token).getPayload();
+            return claims.getExpiration().before(new Date());
+        } catch (ExpiredJwtException e) {
+            return true;
+        } catch (Exception e) {
+            log.warn("Token validation error: {}", e.getMessage());
+            return true;
+        }
     }
 
     public String generateAccessToken(User user) {
@@ -140,8 +187,6 @@ public class JwtProcessor {
         }
     }
 
-    private String getRefreshToken(String accessToken) {
-        return refreshTokenRedisRepository.findById(accessToken).orElse(null);
-    }
+    
 
 }
