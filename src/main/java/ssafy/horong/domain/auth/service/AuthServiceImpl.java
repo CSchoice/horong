@@ -116,28 +116,36 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public AuthResponse refresh(TokenRefreshRequest request) {
-        log.info("[AuthService] Access 토큰 발급 >>>> Refresh 토큰: {}", request.refreshToken());
-        // 리프레시 토큰으로 사용자 ID 조회
+        log.info("[AuthService] 토큰 갱신 시작 >>>> Refresh 토큰: {}", request.refreshToken());
+        
+        // 1. 리프레시 토큰으로 사용자 ID 조회 및 검증
         Long userId = jwtProcessor.findUserIdByRefreshToken(request.refreshToken());
         User user = userRepository.findById(userId)
                 .orElseThrow(InvalidTokenException::new);
         
-        // 리프레시 토큰 유효성 검증
+        // 2. 리프레시 토큰 유효성 검증
         DecodedJwtToken decodedJwtToken = jwtProcessor.decodeToken(request.refreshToken(), REFRESH_TOKEN);
         if (!decodedJwtToken.memberId().equals(userId)) {
             throw new InvalidTokenException();
         }
+        
         try {
+            // 3. 기존 리프레시 토큰 즉시 블랙리스트 처리 (1회용 적용)
+            jwtProcessor.invalidateRefreshToken(request.refreshToken());
+            
+            // 4. 새 액세스 토큰과 리프레시 토큰 발급
             String newAccessToken = jwtProcessor.generateAccessToken(user);
             String newRefreshToken = jwtProcessor.generateRefreshToken(user);
-            jwtProcessor.renewRefreshToken(request.refreshToken(), newRefreshToken, user);
+            
+            // 5. 새 리프레시 토큰 저장
+            jwtProcessor.saveRefreshToken(newRefreshToken, user.getId());
+            
+            log.info("[AuthService] 토큰 갱신 완료 - 새로운 리프레시 토큰 발급됨");
             return AuthResponse.of(newAccessToken, newRefreshToken);
-        }
-        catch (Exception e) {
-            log.error("[AuthService] Access 토큰 발급 중 오류 발생", e);
+        } catch (Exception e) {
+            log.error("[AuthService] 토큰 갱신 중 오류 발생", e);
             throw new TokenSaveFailedException();
         }
-
     }
 
     private Optional<User> findMemberByUserId(String userId) {

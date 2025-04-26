@@ -12,8 +12,9 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
     "ssafy.horong.domain.community.repository",
     "ssafy.horong.domain.currency.repository",
     "ssafy.horong.domain.education.repository",
-    "ssafy.horong.domain.member.repository"
-    // 여기에 다른 JPA 저장소 패키지를 추가하세요
+    "ssafy.horong.domain.member.repository",
+    "ssafy.horong.domain.chat.repository"
+    // 여기에 다른 JPA 저장소 패키지를 추가
 })
 public class JpaRepositoryConfig {
     // JPA 관련 추가 설정이 필요한 경우 여기에 작성

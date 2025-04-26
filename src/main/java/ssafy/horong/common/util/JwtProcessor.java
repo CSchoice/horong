@@ -90,6 +90,29 @@ private JwtParser jwtParser;
         refreshTokenRedisRepository.save(newRefreshToken, String.valueOf(member.getId()));
         expireToken(oldRefreshToken);
     }
+    
+    /**
+     * 리프레시 토큰을 즉시 무효화합니다.
+     * 토큰을 블랙리스트에 추가하고 저장소에서 제거합니다.
+     * @param refreshToken 무효화할 리프레시 토큰
+     */
+    public void invalidateRefreshToken(String refreshToken) {
+        if (refreshToken == null) {
+            log.warn("무효화할 리프레시 토큰이 null입니다");
+            return;
+        }
+        
+        try {
+            // 블랙리스트에 토큰 추가 (만료 시간까지)
+            blacklistTokenRedisRepository.save(refreshToken, getRemainingTime(refreshToken));
+            // Redis에서 토큰 제거
+            refreshTokenRedisRepository.delete(refreshToken);
+            log.info("리프레시 토큰 무효화 완료: {}", refreshToken);
+        } catch (Exception e) {
+            log.error("리프레시 토큰 무효화 실패: {}", e.getMessage());
+            throw new InvalidTokenException("토큰 무효화 중 오류 발생");
+        }
+    }
 
     public void expireToken(String refreshToken) {
         if (refreshToken == null) {
