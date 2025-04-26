@@ -1,3 +1,16 @@
+# Hostname 감지 실패 해결
+spring.cloud.inetutils.preferred-networks: 192.168.1
+spring.cloud.inetutils.timeout-seconds: 3
+
+# Spring Security– 임시 비밀번호 생성 방지
+spring.security.user.name: admin
+spring.security.user.password: ${ADMIN_PASSWORD:securepassword}
+spring.security.user.roles: ADMIN
+
+# 액틀에이터 설정
+management.endpoints.web.exposure.include: health,info,metrics
+management.endpoint.health.show-details: when_authorized
+management.endpoint.health.roles: ADMIN
 spring:
   cache:
     type: redis

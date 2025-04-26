@@ -1,7 +1,7 @@
 package ssafy.horong.domain.member.service.sensitive;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ssafy.horong.common.crypto.CryptoSearchHelper;
@@ -15,21 +15,29 @@ import java.util.Optional;
 /**
  * 사용자 민감 정보 처리 서비스 구현
  */
-@RequiredArgsConstructor
-@Service
 @Slf4j
+@Service
 public class UserSensitiveInfoServiceImpl implements UserSensitiveInfoService {
 
     private final UserSensitiveInfoRepository userSensitiveInfoRepository;
     private final CryptoSearchHelper cryptoSearchHelper;
-    private final UserSensitiveInfoService self; // ✅ 자기 자신 인터페이스 타입으로 주입
+    private final UserSensitiveInfoService self; // 자기 참조를 위한 지연 로딩
+
+    public UserSensitiveInfoServiceImpl(
+            UserSensitiveInfoRepository userSensitiveInfoRepository,
+            CryptoSearchHelper cryptoSearchHelper,
+            @Lazy UserSensitiveInfoService self) {
+        this.userSensitiveInfoRepository = userSensitiveInfoRepository;
+        this.cryptoSearchHelper = cryptoSearchHelper;
+        this.self = self;
+    }
 
     @Override
     @Transactional
     public UserSensitiveInfo saveSensitiveInfo(User user, String phoneNumber, String email, String address, String detailAddress, String birthDate) {
         Optional<UserSensitiveInfo> existingInfo = userSensitiveInfoRepository.findByUser(user);
         if (existingInfo.isPresent()) {
-            // ✅ 자기 자신을 통해 호출
+            // 프록시를 통해 호출하여 @Transactional이 적용되도록 함
             return self.updateSensitiveInfo(user, phoneNumber, email, address, detailAddress, birthDate);
         }
 
@@ -41,7 +49,7 @@ public class UserSensitiveInfoServiceImpl implements UserSensitiveInfoService {
                 .detailAddress(detailAddress)
                 .birthDate(birthDate)
                 .build();
-
+                
         return userSensitiveInfoRepository.save(sensitiveInfo);
     }
 

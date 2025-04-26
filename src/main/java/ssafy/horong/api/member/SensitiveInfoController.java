@@ -16,7 +16,7 @@ import ssafy.horong.domain.member.repository.UserRepository;
 import ssafy.horong.domain.member.service.sensitive.UserSensitiveInfoService;
 
 import java.util.Optional;
-import java.util.stream.Collectors;
+
 import java.util.stream.StreamSupport;
 
 /**
@@ -40,8 +40,8 @@ public class SensitiveInfoController {
     @Operation(summary = "민감 정보 조회", description = "현재 로그인한 사용자의 민감 정보를 조회합니다.")
     public ResponseEntity<SensitiveInfoDto> getSensitiveInfo() {
         return SecurityUtil.getLoginMemberId()
-                .flatMap(userId -> userRepository.findById(userId))
-                .flatMap(user -> sensitiveInfoService.getSensitiveInfo(user))
+                .flatMap(userRepository::findById)
+                .flatMap(sensitiveInfoService::getSensitiveInfo)
                 .map(SensitiveInfoDto::from)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -55,7 +55,7 @@ public class SensitiveInfoController {
     @Operation(summary = "민감 정보 저장/수정", description = "현재 로그인한 사용자의 민감 정보를 저장하거나 수정합니다.")
     public ResponseEntity<SensitiveInfoDto> saveSensitiveInfo(@Valid @RequestBody SensitiveInfoDto dto) {
         Optional<User> currentUser = SecurityUtil.getLoginMemberId()
-                .flatMap(userId -> userRepository.findById(userId));
+                .flatMap(userRepository::findById);
 
         if (currentUser.isEmpty()) {
             return ResponseEntity.badRequest().build();
@@ -85,7 +85,7 @@ public class SensitiveInfoController {
         return ResponseEntity.ok(
                 StreamSupport.stream(results.spliterator(), false)
                         .map(SensitiveInfoDto::from)
-                        .collect(Collectors.toList())
+                        .toList()
         );
     }
 
@@ -101,7 +101,7 @@ public class SensitiveInfoController {
         return ResponseEntity.ok(
                 StreamSupport.stream(results.spliterator(), false)
                         .map(SensitiveInfoDto::from)
-                        .collect(Collectors.toList())
+                        .toList()
         );
     }
 }

@@ -12,6 +12,8 @@ import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.Base64;
 
+import ssafy.horong.common.exception.crypto.CryptoOperationException;
+
 /**
  * 민감한 정보를 암호화하기 위한 유틸리티 클래스
  * AES-256-GCM 알고리즘을 사용하여 안전한 암호화 제공
@@ -64,7 +66,7 @@ public class CryptoUtil {
             return Base64.getEncoder().encodeToString(byteBuffer.array());
         } catch (Exception e) {
             log.error("암호화 과정에서 오류가 발생했습니다: {}", e.getMessage(), e);
-            throw new RuntimeException("암호화에 실패했습니다", e);
+            throw new CryptoOperationException("암호화에 실패했습니다", e);
         }
     }
 
@@ -110,7 +112,7 @@ public class CryptoUtil {
             return new String(plainText, StandardCharsets.UTF_8);
         } catch (Exception e) {
             log.error("복호화 과정에서 오류가 발생했습니다: {}", e.getMessage(), e);
-            throw new RuntimeException("복호화에 실패했습니다", e);
+            throw new CryptoOperationException("복호화에 실패했습니다", e);
         }
     }
 }
