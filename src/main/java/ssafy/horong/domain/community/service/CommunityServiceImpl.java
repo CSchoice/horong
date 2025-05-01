@@ -682,7 +682,10 @@ public class CommunityServiceImpl implements CommunityService {
     private List<ContentImage> extractContentImages(List<ContentImageRequest> imageRequests) {
         return imageRequests.stream()
                 .map(ContentImageRequest::imageUrl)
-                .map(imageUrl -> imageUrl.substring(imageUrl.indexOf("community/")))
+                .map(imageUrl -> {
+                    final String COMMUNITY_PATH = "community/";
+                    return imageUrl.substring(imageUrl.indexOf(COMMUNITY_PATH));
+                })
                 .map(trimmedUrl -> ContentImage.builder().imageUrl(trimmedUrl).build())
                 .toList();
     }
@@ -690,7 +693,10 @@ public class CommunityServiceImpl implements CommunityService {
     private List<ContentImage> extractMessageContentImages(List<ContentImageRequest> imageRequests) {
         return imageRequests.stream()
                 .map(ContentImageRequest::imageUrl)
-                .map(imageUrl -> imageUrl.substring(imageUrl.indexOf("community/")))
+                .map(imageUrl -> {
+                    final String COMMUNITY_PATH = "community/";
+                    return imageUrl.substring(imageUrl.indexOf(COMMUNITY_PATH));
+                })
                 .map(trimmedUrl -> ContentImage.builder().imageUrl(trimmedUrl).build())
                 .toList();
     }
@@ -757,7 +763,10 @@ public class CommunityServiceImpl implements CommunityService {
             if (existingMainContent != null) {
                 List<ContentImage> existingImages = existingMainContent.getContentImages();
                 List<String> newImageUrls = command.contentImageRequest().stream()
-                        .map(imageRequest -> imageRequest.imageUrl().substring(imageRequest.imageUrl().indexOf("community/")))
+                        .map(imageRequest -> {
+                            final String COMMUNITY_PATH = "community/";
+                            return imageRequest.imageUrl().substring(imageRequest.imageUrl().indexOf(COMMUNITY_PATH));
+                        })
                         .toList();
 
                 existingImages.removeIf(image -> !newImageUrls.contains(image.getImageUrl()));
@@ -837,11 +846,12 @@ public class CommunityServiceImpl implements CommunityService {
     }
 
     private String getContentByLanguage(Post post, Language language, ContentByLanguage.ContentType contentType) {
+        final String ERROR_MESSAGE = "Post content not found";
         return post.getContentByCountries().stream()
                 .filter(c -> c.getLanguage() == language && c.getContentType() == contentType)
                 .findFirst()
                 .map(ContentByLanguage::getContent)
-                .orElseThrow(PostNotFoundException::new);
+                .orElseThrow(() -> new PostNotFoundException(ERROR_MESSAGE));
     }
 
     private String getContentByLanguage(List<ContentByLanguage> contents, Language language) {

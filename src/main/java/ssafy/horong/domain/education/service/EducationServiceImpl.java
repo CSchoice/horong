@@ -124,7 +124,7 @@ public class EducationServiceImpl implements EducationService {
                                 education.getWord(),
                                 education.getPronunciation()
                         ))
-                        .collect(Collectors.toList());
+                        .toList();
 
                 // 변환된 TodayTranslatedWordResponse 리스트를 translatedWords에 추가
                 translatedWords.addAll(responses);
@@ -174,10 +174,10 @@ public class EducationServiceImpl implements EducationService {
                                         wordEntry.getValue()
                                 );
                             })
-                            .collect(Collectors.toList());
+                            .toList();
                     return new GetEducationRecordByDayResponse(date, wordResponses);
                 })
-                .collect(Collectors.toList());
+                .toList();
 
         // 변환된 리스트를 사용하여 최종 응답 생성
         return new GetAllEducationRecordResponse(dayResponses);
@@ -195,7 +195,7 @@ public class EducationServiceImpl implements EducationService {
         UUID recordIndex = UUID.randomUUID();
         String location = s3Util.uploadToS3(command.audio(), command.word() + "/" + userId + "/" + recordIndex, "education/");
         log.info("location: {}", location);
-        log.info("word_id", education.getId());
+        log.info("word_id: {}", education.getId());
 
         EducationRecord educationRecord = EducationRecord.builder()
                 .education(education)
@@ -266,7 +266,8 @@ public class EducationServiceImpl implements EducationService {
             educationDay.getWordIds().add(education.getId().intValue());
         }
 
-        if (educationDay.getWordIds().size() >= 5) {
+        final int REQUIRED_WORDS_FOR_STAMP = 5;
+        if (educationDay.getWordIds().size() >= REQUIRED_WORDS_FOR_STAMP) {
             LocalDate todayDate = LocalDate.now();
 
             // 오늘 날짜로 스탬프가 이미 존재하는지 확인
@@ -304,10 +305,12 @@ public class EducationServiceImpl implements EducationService {
                 .toList();
 
         // 리스트 길이가 10 이상인 경우 처리
-        if (dates.size() >= 10) {
-            int remainder = dates.size() % 10;
+        final int MINIMUM_STAMPS = 10;
+        if (dates.size() >= MINIMUM_STAMPS) {
+            final int STAMP_INTERVAL = 10;
+            int remainder = dates.size() % STAMP_INTERVAL;
             return dates.stream()
-                    .filter(date -> dates.indexOf(date) % 10 == remainder)
+                    .filter(date -> dates.indexOf(date) % STAMP_INTERVAL == remainder)
                     .toList();
         }
 

@@ -34,7 +34,10 @@ public class NotificationServiceImpl implements NotificationService {
     @Transactional
     public void markAsRead(Long notificationId, Notification.NotificationType type) {
         Notification notification = notificationRepository.findById(notificationId)
-                .orElseThrow(() -> new ResourceNotFoundException("알림이 존재하지 않습니다."));
+                .orElseThrow(() -> {
+                    final String NOTIFICATION_NOT_FOUND = "알림이 존재하지 않습니다.";
+                    return new ResourceNotFoundException(NOTIFICATION_NOT_FOUND);
+                });
         notification.markAsRead();
         notificationRepository.save(notification);
 
@@ -83,8 +86,14 @@ public class NotificationServiceImpl implements NotificationService {
 
     private User getCurrentUser() {
         Long userId = SecurityUtil.getLoginMemberId()
-                .orElseThrow(() -> new RuntimeException("로그인한 사용자가 존재하지 않습니다."));
+                .orElseThrow(() -> {
+                    final String LOGIN_USER_NOT_FOUND = "로그인한 사용자가 존재하지 않습니다.";
+                    return new RuntimeException(LOGIN_USER_NOT_FOUND);
+                });
         return userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("사용자가 존재하지 않습니다."));
+                .orElseThrow(() -> {
+                    final String USER_NOT_FOUND = "사용자가 존재하지 않습니다.";
+                    return new RuntimeException(USER_NOT_FOUND);
+                });
     }
 }

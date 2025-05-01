@@ -10,11 +10,8 @@ import ssafy.horong.api.CommonResponse;
 import ssafy.horong.api.shortForm.request.ModifyIsSavedRequest;
 import ssafy.horong.api.shortForm.request.ModifyPreferenceRequest;
 import ssafy.horong.api.shortForm.request.SaveShortFormLogRequest;
-import ssafy.horong.api.shortForm.response.ShortFromListResponse;
-import ssafy.horong.api.shortForm.response.ShortFromResponse;
-import ssafy.horong.domain.shortForm.command.ModifyIsSavedCommand;
-import ssafy.horong.domain.shortForm.command.SaveShortFormLogCommand;
-import ssafy.horong.domain.shortForm.command.ModifyPreferenceCommand;
+import ssafy.horong.api.shortForm.response.ShortFormListResponse;
+import ssafy.horong.api.shortForm.response.ShortFormResponse;
 import ssafy.horong.domain.shortForm.service.ShortFormService;
 
 import java.util.List;
@@ -24,39 +21,39 @@ import java.util.List;
 @RequestMapping("/shortForm")
 @Slf4j
 @Tag(name = "ShortForm", description = "숏폼 관련 API")
-public class ShortFromController {
+public class ShortFormController {
 
     private final ShortFormService shortFormService;
 
     @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     @Operation(summary = "숏폼 리스트 조회", description = "로그인한 사용자의 숏폼 리스트를 조회합니다.")
     @GetMapping("")
-    public CommonResponse<List<ShortFromResponse>> getShortFormList() {
-        List<ShortFromResponse> response = shortFormService.getShortFormList();
+    public CommonResponse<List<ShortFormResponse>> getShortFormList() {
+        List<ShortFormResponse> response = shortFormService.getShortFormList();
         return CommonResponse.ok(response);
     }
 
     @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     @Operation(summary = "숏폼 리스트 조회", description = "로그인한 사용자의 숏폼 리스트를 조회합니다.")
     @GetMapping("preferences")
-    public CommonResponse<List<ShortFromResponse>> getPreferenceList() {
-        List<ShortFromResponse> response = shortFormService.getPreferenceList();
+    public CommonResponse<List<ShortFormResponse>> getPreferenceList() {
+        List<ShortFormResponse> response = shortFormService.getPreferenceList();
         return CommonResponse.ok(response);
     }
 
     @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     @Operation(summary = "숏폼 리스트 조회", description = "로그인한 사용자의 숏폼 리스트를 조회합니다.")
     @GetMapping("liked")
-    public CommonResponse<List<ShortFromResponse>> getLikedList() {
-        List<ShortFromResponse> response = shortFormService.getLikedList();
+    public CommonResponse<List<ShortFormResponse>> getLikedList() {
+        List<ShortFormResponse> response = shortFormService.getLikedList();
         return CommonResponse.ok(response);
     }
 
     @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     @Operation(summary = "숏폼 detail 조회", description = "숏폼의 상세 정보를 조회합니다.")
     @GetMapping("/{shortFormId}")
-    public CommonResponse<ShortFromListResponse> getShortFormDetail(@PathVariable Long shortFormId) {
-        ShortFromListResponse response = shortFormService.getShortFormDetail(shortFormId);
+    public CommonResponse<ShortFormListResponse> getShortFormDetail(@PathVariable Long shortFormId) {
+        ShortFormListResponse response = shortFormService.getShortFormDetail(shortFormId);
         return CommonResponse.ok(response);
     }
 

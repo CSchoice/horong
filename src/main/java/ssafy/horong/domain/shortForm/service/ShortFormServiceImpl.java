@@ -6,8 +6,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
-import ssafy.horong.api.shortForm.response.ShortFromListResponse;
-import ssafy.horong.api.shortForm.response.ShortFromResponse;
+import ssafy.horong.api.shortForm.response.ShortFormListResponse;
+import ssafy.horong.api.shortForm.response.ShortFormResponse;
 import ssafy.horong.common.exception.data.DataNotFoundException;
 import ssafy.horong.common.properties.WebClientProperties;
 import ssafy.horong.common.util.SecurityUtil;
@@ -29,8 +29,12 @@ public class ShortFormServiceImpl implements ShortFormService {
     private final WebClient webClient;
     private final WebClientProperties webClientProperties;
     private final UserUtil userUtil;
+    
+    private String getDefaultErrorMessage() {
+        return "Unknown error";
+    }
 
-    public List<ShortFromResponse> getShortFormList() {
+    public List<ShortFormResponse> getShortFormList() {
         // 로그인된 사용자의 ID 가져오기
         Long userId = userUtil.getCurrentUser().getId();
 
@@ -38,16 +42,16 @@ public class ShortFormServiceImpl implements ShortFormService {
         String requestUrl = webClientProperties.url() + "/shortform/" + userId;
 
         // WebClient 호출
-        List<ShortFromResponse> response = webClient.get()
+        List<ShortFormResponse> response = webClient.get()
                 .uri(requestUrl)
                 .retrieve()
                 .onStatus(
                         status -> status.is4xxClientError() || status.is5xxServerError(),
                         clientResponse -> clientResponse.bodyToMono(String.class)
-                                .defaultIfEmpty("Unknown error")
+                                .defaultIfEmpty(getDefaultErrorMessage())
                                 .flatMap(errorBody -> Mono.error(new DataNotFoundException()))
                 )
-                .bodyToFlux(ShortFromResponse.class)
+                .bodyToFlux(ShortFormResponse.class)
                 .collectList()
                 .blockOptional()
                 .orElseThrow(DataNotFoundException::new);
@@ -57,7 +61,7 @@ public class ShortFormServiceImpl implements ShortFormService {
         return response;
     }
 
-    public List<ShortFromResponse> getPreferenceList() {
+    public List<ShortFormResponse> getPreferenceList() {
         // 로그인된 사용자의 ID 가져오기
         Long userId = userUtil.getCurrentUser().getId();
 
@@ -65,16 +69,16 @@ public class ShortFormServiceImpl implements ShortFormService {
         String requestUrl = webClientProperties.url() + "/shortform/preference/" + userId;
 
         // WebClient 호출
-        List<ShortFromResponse> response = webClient.get()
+        List<ShortFormResponse> response = webClient.get()
                 .uri(requestUrl)
                 .retrieve()
                 .onStatus(
                         status -> status.is4xxClientError() || status.is5xxServerError(),
                         clientResponse -> clientResponse.bodyToMono(String.class)
-                                .defaultIfEmpty("Unknown error")
+                                .defaultIfEmpty(getDefaultErrorMessage())
                                 .flatMap(errorBody -> Mono.error(new DataNotFoundException()))
                 )
-                .bodyToFlux(ShortFromResponse.class)
+                .bodyToFlux(ShortFormResponse.class)
                 .collectList()
                 .blockOptional()
                 .orElseThrow(DataNotFoundException::new);
@@ -84,7 +88,7 @@ public class ShortFormServiceImpl implements ShortFormService {
         return response;
     }
 
-    public List<ShortFromResponse> getLikedList() {
+    public List<ShortFormResponse> getLikedList() {
         // 로그인된 사용자의 ID 가져오기
         Long userId = userUtil.getCurrentUser().getId();
 
@@ -92,16 +96,16 @@ public class ShortFormServiceImpl implements ShortFormService {
         String requestUrl = webClientProperties.url() + "/shortform/is_saved/" + userId;
 
         // WebClient 호출
-        List<ShortFromResponse> response = webClient.get()
+        List<ShortFormResponse> response = webClient.get()
                 .uri(requestUrl)
                 .retrieve()
                 .onStatus(
                         status -> status.is4xxClientError() || status.is5xxServerError(),
                         clientResponse -> clientResponse.bodyToMono(String.class)
-                                .defaultIfEmpty("Unknown error")
+                                .defaultIfEmpty(getDefaultErrorMessage())
                                 .flatMap(errorBody -> Mono.error(new DataNotFoundException()))
                 )
-                .bodyToFlux(ShortFromResponse.class)
+                .bodyToFlux(ShortFormResponse.class)
                 .collectList()
                 .blockOptional()
                 .orElseThrow(DataNotFoundException::new);
@@ -111,21 +115,21 @@ public class ShortFormServiceImpl implements ShortFormService {
         return response;
     }
 
-    public ShortFromListResponse getShortFormDetail(Long shortFormId) {
+    public ShortFormListResponse getShortFormDetail(Long shortFormId) {
         // 요청 URL 생성
         String requestUrl = webClientProperties.url() + "/shortform/" + userUtil.getCurrentUser().getId() + "/" + shortFormId;
 
         // WebClient 호출
-        ShortFromListResponse response = webClient.get()
+        ShortFormListResponse response = webClient.get()
                 .uri(requestUrl)
                 .retrieve()
                 .onStatus(
                         status -> status.is4xxClientError() || status.is5xxServerError(),
                         clientResponse -> clientResponse.bodyToMono(String.class)
-                                .defaultIfEmpty("Unknown error")
+                                .defaultIfEmpty(getDefaultErrorMessage())
                                 .flatMap(errorBody -> Mono.error(new DataNotFoundException()))
                 )
-                .bodyToMono(ShortFromListResponse.class)
+                .bodyToMono(ShortFormListResponse.class)
                 .blockOptional()
                 .orElseThrow(DataNotFoundException::new);
 
@@ -158,14 +162,15 @@ public class ShortFormServiceImpl implements ShortFormService {
                 .onStatus(
                         status -> status.is4xxClientError() || status.is5xxServerError(),
                         clientResponse -> clientResponse.bodyToMono(String.class)
-                                .defaultIfEmpty("Unknown error")
+                                .defaultIfEmpty(getDefaultErrorMessage())
                                 .flatMap(errorBody -> Mono.error(new DataNotFoundException()))
                 )
                 .bodyToMono(String.class)
                 .block();
 
         log.info("로그 저장 응답: {}", response);
-        return "로그 저장에 성공했습니다.";
+        final String SUCCESS_MESSAGE = "로그 저장에 성공했습니다.";
+        return SUCCESS_MESSAGE;
     }
 
     // 숏폼 좋아요/싫어요 수정
@@ -188,19 +193,19 @@ public class ShortFormServiceImpl implements ShortFormService {
                 .onStatus(
                         status -> status.is4xxClientError() || status.is5xxServerError(),
                         clientResponse -> clientResponse.bodyToMono(String.class)
-                                .defaultIfEmpty("Unknown error")
+                                .defaultIfEmpty(getDefaultErrorMessage())
                                 .flatMap(errorBody -> Mono.error(new RuntimeException(errorBody)))
                 )
                 .bodyToMono(String.class)
                 .block();
 
         log.info("좋아요/싫어요 수정 응답: {}", response);
-        return "좋아요/싫어요 반영에 성공했습니다.";
+        final String SUCCESS_MESSAGE = "좋아요/싫어요 반영에 성공했습니다.";
+        return SUCCESS_MESSAGE;
     }
 
     // 숏폼 스크랩 여부 수정
     public String modifyIsSaved(ModifyIsSavedCommand command) {
-
         // 요청 URL 생성
         String requestUrl = webClientProperties.url() + "/shortform/is_saved";
 
@@ -220,13 +225,14 @@ public class ShortFormServiceImpl implements ShortFormService {
                 .onStatus(
                         status -> status.is4xxClientError() || status.is5xxServerError(),
                         clientResponse -> clientResponse.bodyToMono(String.class)
-                                .defaultIfEmpty("Unknown error")
+                                .defaultIfEmpty(getDefaultErrorMessage())
                                 .flatMap(errorBody -> Mono.error(new RuntimeException(errorBody)))
                 )
                 .bodyToMono(String.class)
                 .block();
 
         log.info("스크랩 여부 수정 응답: {}", response);
-        return "스크랩 반영에 성공했습니다.";
+        final String SUCCESS_MESSAGE = "스크랩 반영에 성공했습니다.";
+        return SUCCESS_MESSAGE;
     }
 }

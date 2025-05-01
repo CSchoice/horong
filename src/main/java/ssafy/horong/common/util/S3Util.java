@@ -151,16 +151,7 @@ public class S3Util {
         }
     }
 
-//    public URI getS3UrlFromS3(String objectKey) {
-//        // S3 버킷의 기본 URL을 앞에 붙여서 URI 객체로 반환합니다.
-//        String baseUrl = "https://horong-service.s3.ap-northeast-2.amazonaws.com/";
-//        String fullUrl = baseUrl + objectKey;
-//
-//        log.info("생성된 S3 URI: {}", fullUrl);
-//
-//        // String을 URI로 변환하여 반환
-//        return URI.create(fullUrl);
-//    }
+
 
     public URI getS3UrlFromS3(String imagePath) {
         try {
@@ -175,9 +166,10 @@ public class S3Util {
                     .build();
 
             // Presigned URL 요청 생성 (유효 기간 10분 설정)
+            final Duration URL_EXPIRATION = Duration.ofMinutes(10);
             GetObjectPresignRequest getObjectPresignRequest = GetObjectPresignRequest.builder()
                     .getObjectRequest(getObjectRequest)
-                    .signatureDuration(Duration.ofMinutes(10))  // Presigned URL의 유효 기간 설정
+                    .signatureDuration(URL_EXPIRATION)  // Presigned URL의 유효 기간 설정
                     .build();
 
             // Presigned URL 생성
@@ -195,12 +187,13 @@ public class S3Util {
     }
 
     private String extractObjectKey(String imagePath) {
-        return imagePath.replace("https://sera-image.s3.ap-northeast-2.amazonaws.com/", "");
+        final String S3_BASE_URL = "https://sera-image.s3.ap-northeast-2.amazonaws.com/";
+        return imagePath.replace(S3_BASE_URL, "");
     }
 
     public String getFullS3ImageUrl(String objectKey) {
-        // 객체 키에 S3 URL을 붙여서 반환
-        return "https://sera-image.s3.ap-northeast-2.amazonaws.com/" + objectKey;
+        final String S3_BASE_URL = "https://sera-image.s3.ap-northeast-2.amazonaws.com/";
+        return S3_BASE_URL + objectKey;
     }
 
     private GetObjectRequest createGetObjectRequest(String objectKey) {
@@ -211,9 +204,10 @@ public class S3Util {
     }
 
     private GetObjectPresignRequest createGetObjectPresignRequest(GetObjectRequest getObjectRequest) {
+        final Duration URL_EXPIRATION = Duration.ofMinutes(10);
         return GetObjectPresignRequest.builder()
                 .getObjectRequest(getObjectRequest)
-                .signatureDuration(Duration.ofMinutes(10))
+                .signatureDuration(URL_EXPIRATION)
                 .build();
     }
 }
