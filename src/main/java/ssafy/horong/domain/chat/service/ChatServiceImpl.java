@@ -8,6 +8,7 @@ import ssafy.horong.api.chat.request.HorongChatContentRequest;
 import ssafy.horong.api.chat.response.HorongChatMessageResponse;
 import ssafy.horong.api.chat.response.HorongChatRoomListResponse;
 import ssafy.horong.api.chat.response.HorongChatRoomResponse;
+import ssafy.horong.api.kafka.producer.KafkaProducerService;
 import ssafy.horong.common.exception.User.MemberNotFoundException;
 import ssafy.horong.common.exception.horongChat.ChatRoomAccessDeniedException;
 import ssafy.horong.common.exception.security.NotAuthenticatedException;
@@ -15,11 +16,13 @@ import ssafy.horong.common.util.SecurityUtil;
 import ssafy.horong.domain.chat.repository.ChatRepository;
 import ssafy.horong.domain.chat.repository.ChatRoomRepository;
 import ssafy.horong.domain.chat.command.SaveChatLogCommand;
+import ssafy.horong.domain.chat.dto.ChatKafkaMessage;
 import ssafy.horong.domain.chat.entity.Chat;
 import ssafy.horong.domain.chat.entity.ChatRoom;
 import ssafy.horong.domain.member.entity.User;
 import ssafy.horong.domain.member.repository.UserRepository;
 
+import java.util.ArrayList;
 import java.util.List;
 @Slf4j
 @Service
@@ -29,6 +32,7 @@ public class ChatServiceImpl implements ChatService {
     private final ChatRepository horongChatRepository;
     private final UserRepository userRepository;
     private final ChatRoomRepository chatRoomRepository;
+    private final KafkaProducerService kafkaProducerService;
 
     @Transactional
     public void saveChatLog(SaveChatLogCommand command) {
@@ -42,6 +46,20 @@ public class ChatServiceImpl implements ChatService {
                 .build();
 
         chatRoomRepository.save(chatRoom);  // 채팅방 저장
+        
+        // 카프카로 채팅방 생성 이벤트 발행
+        ChatKafkaMessage roomCreatedEvent = ChatKafkaMessage.builder()
+                .id(java.util.UUID.randomUUID().toString())
+                .roomId(chatRoom.getId())
+                .userId(currentUser.getId())
+                .messageType(ChatKafkaMessage.ChatMessageType.ROOM_CREATED)
+                .timestamp(java.time.LocalDateTime.now())
+                .build();
+                
+        kafkaProducerService.sendChatMessage(roomCreatedEvent);
+
+        // 채팅 메시지 목록 저장을 위한 리스트
+        List<HorongChatMessageResponse> chatMessages = new ArrayList<>();
 
         // 2. 명령 객체에서 채팅 내용을 가져와서 해당 방에 메시지 저장 (양방향 연관관계 설정 없이 직접 room 설정)
         for (HorongChatContentRequest content : command.chatContents()) {
@@ -52,7 +70,26 @@ public class ChatServiceImpl implements ChatService {
                     .build();
 
             horongChatRepository.save(chatEntity);  // DB에 메시지 저장
+            
+            // 응답 목록에 메시지 추가
+            chatMessages.add(new HorongChatMessageResponse(
+                    chatEntity.getContent(),
+                    chatEntity.getAuthorType(),
+                    chatEntity.getCreatedAt()
+            ));
         }
+        
+        // 카프카로 채팅 로그 저장 이벤트 발행
+        ChatKafkaMessage chatLogEvent = ChatKafkaMessage.builder()
+                .id(java.util.UUID.randomUUID().toString())
+                .roomId(chatRoom.getId())
+                .userId(currentUser.getId())
+                .messages(chatMessages)
+                .messageType(ChatKafkaMessage.ChatMessageType.CHAT_LOG_SAVED)
+                .timestamp(java.time.LocalDateTime.now())
+                .build();
+                
+        kafkaProducerService.sendChatMessage(chatLogEvent);
     }
 
     public HorongChatRoomListResponse getChatRoomList() {

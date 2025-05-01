@@ -13,6 +13,7 @@ import ssafy.horong.common.properties.*;
         S3Properties.class,
         WebClientProperties.class,
         ElasticsearchProperties.class,
+        KafkaProperties.class,
 })
 public class PropertiesConfig {
 }
