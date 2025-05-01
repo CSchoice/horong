@@ -129,5 +129,4 @@ rate-limit:
 # 암호화 설정
 crypto:
   enabled: true
-  secret-key: ${CRYPTO_SECRET_KEY:1234567890abcdef1234567890abcdef} # 32바이트 비밀키 (환경변수로 설정하거나 프로덕션에서는 Vault 등 사용 권장)
-
+  secret-key: ${CRYPTO_SECRET_KEY}

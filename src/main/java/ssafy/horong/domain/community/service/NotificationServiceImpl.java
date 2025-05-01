@@ -42,17 +42,13 @@ public class NotificationServiceImpl implements NotificationService {
 
         User user = getCurrentUser();
         
-        // 기존 방식으로 SSE를 통한 알림 전송 (기존 호환성 유지)
+        // 기존 방식으로 SSE를 통한 알림 전송
         notificationUtil.sendMergedNotifications(user);
         
         // 카프카를 통한 알림 이벤트 발행 (읽음 처리됨)
         publishNotificationEvent(user);
     }
     
-    /**
-     * 사용자의 알림을 조회하여 카프카 이벤트로 발행
-     * @param user 사용자 정보
-     */
     private void publishNotificationEvent(User user) {
         // 읽지 않은 댓글 알림 조회
         List<Notification> unreadCommentNotifications = notificationRepository
