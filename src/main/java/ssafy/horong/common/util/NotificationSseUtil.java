@@ -16,7 +16,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 @Component
 @RequiredArgsConstructor
-public class NotificationUtil {
+public class NotificationSseUtil {
 
     private final NotificationRepository notificationRepository;
     private final Map<Long, List<SseEmitter>> emitters = new ConcurrentHashMap<>();
