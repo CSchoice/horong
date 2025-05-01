@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import ssafy.horong.api.community.response.NotificationResponse;
+import ssafy.horong.common.exception.notification.NotificationException;
 import ssafy.horong.domain.community.entity.Notification;
 import ssafy.horong.domain.community.repository.NotificationRepository;
 import ssafy.horong.domain.member.entity.User;
@@ -78,7 +79,7 @@ public class NotificationUtil {
                     .data("connected"));
         } catch (IOException e) {
             removeEmitter(userId, emitter);
-            throw new RuntimeException(e);
+            throw new NotificationException("SSE 연결 초기화 중 오류가 발생했습니다.", e);
         }
 
         // 일정 시간마다 더미 이벤트 전송

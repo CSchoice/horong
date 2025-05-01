@@ -7,4 +7,8 @@ public class PostNotFoundException extends BaseException {
     public PostNotFoundException() {
         super(CommunityErrorCode.POST_NOT_FOUND);
     }
+    
+    public PostNotFoundException(String message) {
+        super(CommunityErrorCode.POST_NOT_FOUND, message);
+    }
 }

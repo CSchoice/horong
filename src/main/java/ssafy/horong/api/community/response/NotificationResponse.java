@@ -1,6 +1,7 @@
 package ssafy.horong.api.community.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import ssafy.horong.common.exception.board.PostNotFoundException;
 import ssafy.horong.domain.community.entity.ContentByLanguage;
 import ssafy.horong.domain.community.entity.Notification;
@@ -13,6 +14,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Schema(description = "알림 응답 DTO") // NotificationResponse 클래스 전체에 대한 설명 추가
+@JsonIgnoreProperties(ignoreUnknown = true)
 public record NotificationResponse(
         @Schema(description = "알림 ID", example = "1")
         Long id,
@@ -76,5 +78,33 @@ public record NotificationResponse(
                 .findFirst()
                 .map(ContentByLanguage::getContent)
                 .orElse("");
+    }
+    
+    /**
+     * 단일 알림에서 NotificationResponse로 변환
+     * @param notification 알림 엔티티
+     * @param language 사용자 언어
+     * @return NotificationResponse
+     */
+    public static NotificationResponse from(Notification notification, Language language) {
+        return new NotificationResponse(
+                notification.getId(),
+                notification.getType().name(),
+                notification.getMessageContent(),
+                notification.getPost() != null ? new NotificationPostResponse(
+                        notification.getPost().getType().name(),
+                        notification.getPost().getId(),
+                        getContentByLanguage(notification.getPost(), language)
+                ) : null,
+                notification.getMessage() != null ? new NotificationMessageResponse(
+                        notification.getMessage().getId(),
+                        getMessageContentByLanguage(notification.getMessage(), language),
+                        notification.getType().name(),
+                        notification.getMessage().getMessageRoom().getId()
+                ) : null,
+                notification.getSender().getId(),
+                notification.getSender().getNickname(),
+                notification.getCreatedAt()
+        );
     }
 }

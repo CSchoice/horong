@@ -20,32 +20,32 @@ public class EducationController {
     private final EducationService educationService;
     @Operation(summary = "오늘의 단어", description = "오늘의 단어를 가져오는 API입니다.")
     @GetMapping("/today")
-    public CommonResponse<?> getTodayWords() {
+    public CommonResponse<TodayWordsResponse> getTodayWords() {
         TodayWordsResponse response = educationService.getTodayWords();
         return CommonResponse.ok(response);
     }
 
     @Operation(summary = "교육 기록 조회", description = "모든 교육 기록을 조회하는 API입니다.")
     @GetMapping("/records")
-    public CommonResponse<?> getEducationRecord() {
+    public CommonResponse<Object> getEducationRecord() {
         return CommonResponse.ok(educationService.getAllEducationRecord());
     }
 
     @Operation(summary = "한국어 학습 기록", description = "한국어 학습 기록을 저장하는 API입니다.")
     @PostMapping(value = "/record", consumes = { "multipart/form-data" })
-    public CommonResponse<?> saveEducationRecord(@ModelAttribute @Validated SaveEducationRecordRequest request) {
+    public CommonResponse<Object> saveEducationRecord(@ModelAttribute @Validated SaveEducationRecordRequest request) {
         return CommonResponse.ok(educationService.saveEducationRecord(request.toCommand()));
     }
 
     @Operation(summary = "스탬프 날짜 조회", description = "스탬프 날짜를 조회하는 API입니다.")
     @GetMapping("/stamps")
-    public CommonResponse<?> getStampDates() {
+    public CommonResponse<Object> getStampDates() {
         return CommonResponse.ok(educationService.getStampDates());
     }
 
     @Operation(summary = "한국어 학습 기록 세부 조회", description = "한국어 학습 기록 세부를 조회하는 API입니다.")
     @GetMapping("/record/{wordId}")
-    public CommonResponse<?> getEducationRecordDetail(@PathVariable Long wordId) {
+    public CommonResponse<Object> getEducationRecordDetail(@PathVariable Long wordId) {
         return CommonResponse.ok(educationService.getEducationRecordDetail(wordId));
     }
 }

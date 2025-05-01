@@ -230,7 +230,7 @@ public class HealthController {
                 ObjectMapper objectMapper = new ObjectMapper();
 
                 // JSON 문자열을 Map 형태로 변환
-                return objectMapper.readValue(jsonString, Map.class);
+                return objectMapper.readValue(jsonString, new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {});
             } catch (Exception e) {
                 e.printStackTrace();
                 throw new RuntimeException("JSON 파싱 오류");

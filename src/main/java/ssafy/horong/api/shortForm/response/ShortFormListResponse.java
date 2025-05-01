@@ -1,6 +1,6 @@
 package ssafy.horong.api.shortForm.response;
 
-public record ShortFromListResponse(
+public record ShortFormListResponse(
         Long id,
         String content,
         String image,

@@ -16,6 +16,22 @@ spring:
     type: redis
   application:
     name: horong
+  # 카프카 설정
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: ${KAFKA_CONSUMER_GROUP_ID:horong-group}
+      auto-offset-reset: ${KAFKA_CONSUMER_AUTO_OFFSET_RESET:earliest}
+      key-deserializer: ${KAFKA_CONSUMER_KEY_DESERIALIZER:org.apache.kafka.common.serialization.StringDeserializer}
+      value-deserializer: ${KAFKA_CONSUMER_VALUE_DESERIALIZER:org.apache.kafka.common.serialization.StringDeserializer}
+    producer:
+      key-serializer: ${KAFKA_PRODUCER_KEY_SERIALIZER:org.apache.kafka.common.serialization.StringSerializer}
+      value-serializer: ${KAFKA_PRODUCER_VALUE_SERIALIZER:org.apache.kafka.common.serialization.StringSerializer}
+      acks: ${KAFKA_PRODUCER_ACKS:all}
+      retries: ${KAFKA_PRODUCER_RETRIES:3}
+      batch-size: ${KAFKA_PRODUCER_BATCH_SIZE:16384}
+      linger-ms: ${KAFKA_PRODUCER_LINGER_MS:5}
+      compression-type: ${KAFKA_PRODUCER_COMPRESSION_TYPE:gzip}
   mail:
     host: ${GMAIL_HOST}
     port: ${GMAIL_PORT}
@@ -31,7 +47,6 @@ spring:
           connection-timeout: 5000
           timeout: 5000
           write-timeout: 5000
-    auth-code-expiration-millis: 1800000
 
   datasource:
     url: ${DATASOURCE_URL}
@@ -114,4 +129,4 @@ rate-limit:
 # 암호화 설정
 crypto:
   enabled: true
-  secret-key: ${CRYPTO_SECRET_KEY:1234567890abcdef1234567890abcdef} # 32바이트 비밀키 (환경변수로 설정하거나 프로덕션에서는 Vault 등 사용 권장)
+  secret-key: ${CRYPTO_SECRET_KEY}

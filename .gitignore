@@ -37,3 +37,11 @@ out/
 .vscode/
 
 performance_improvements*.md
+
+docker-compose-kafka.yml
+*kafka.bat
+kafka-integration.md
+
+gradle.properties
+.env.dev
+도커

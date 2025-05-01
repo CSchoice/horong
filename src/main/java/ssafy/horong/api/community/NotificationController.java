@@ -2,6 +2,7 @@ package ssafy.horong.api.community;
 
 import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -17,6 +18,7 @@ import ssafy.horong.domain.member.repository.UserRepository;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/notifications")
+@Slf4j
 public class NotificationController {
 
     private final NotificationService notificationService;
@@ -35,7 +37,7 @@ public class NotificationController {
     @Operation(summary = "알림 스트림", description = "알림을 스트림으로 전송합니다.")
     @GetMapping("/stream")
     public SseEmitter streamNotifications() {
-        System.out.println("streamNotifications 메서드 호출됨 - 호출 원인 확인 필요");
+        log.info("streamNotifications 메서드 호출됨 - 호출 원인 확인 필요");
         return notificationUtil.createSseEmitter();
     }
 
