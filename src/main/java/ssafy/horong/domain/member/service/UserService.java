@@ -9,16 +9,28 @@ import ssafy.horong.domain.member.common.Language;
 import java.util.List;
 
 public interface UserService {
+
+    // 회원가입
     UserSignupResponse signupMember(MemberSignupCommand signupCommand);
-    UserProfileDetailResponse getMemberProfileDetail();
+
+    // 회원 정보 조회
     UserDetailResponse getMemberDetail();
+    UserProfileDetailResponse getMemberProfileDetail();
+    UserIdResponse getMemberId();
+
+    // 회원 정보 수정
     UserDetailResponse updateMemberProfile(UpdateProfileCommand command);
+    UserProfileDetailResponse updateProfileImage(Integer profileImageNumber);
+    void updateLanguage(Language language);
+    void updateMemberPassword(PasswordUpdateCommand command);
+
+    // 회원 탈퇴
     String deleteMember();
+
+    // 중복 체크
     boolean checkNickname(String nickname);
     boolean checkUserId(String userId);
-    void updateMemberPassword(PasswordUpdateCommand command);
-    UserIdResponse getMemberId();
-    void updateLanguage(Language language);
+
+    // 프로필 잠금 해제 목록 조회
     List<ProfileUnlockedResponse> getProfileUnlocked();
-    UserProfileDetailResponse updateProfileImage(Integer profileImage);
 }

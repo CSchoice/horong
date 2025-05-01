@@ -1,3 +1,16 @@
+# Hostname 감지 실패 해결
+spring.cloud.inetutils.preferred-networks: 192.168.1
+spring.cloud.inetutils.timeout-seconds: 3
+
+# Spring Security– 임시 비밀번호 생성 방지
+spring.security.user.name: admin
+spring.security.user.password: ${ADMIN_PASSWORD:securepassword}
+spring.security.user.roles: ADMIN
+
+# 액틀에이터 설정
+management.endpoints.web.exposure.include: health,info,metrics
+management.endpoint.health.show-details: when_authorized
+management.endpoint.health.roles: ADMIN
 spring:
   cache:
     type: redis
@@ -69,3 +82,36 @@ cloud:
     credentials:
       accessKey: ${S3_ACCESS_KEY}
       secretKey: ${S3_SECRET_KEY}
+
+# Rate Limiting 설정
+rate-limit:
+  enabled: true
+  rules:
+    # 인증/로그인 API
+    - name: auth
+      path-pattern: /api/auth/**
+      capacity: 10
+      refill-tokens: 10
+      refill-duration-sec: 60
+      type: IP
+    
+    # 일반 API
+    - name: general
+      path-pattern: /api/**
+      capacity: 100
+      refill-tokens: 100
+      refill-duration-sec: 60
+      type: USER
+    
+    # 검색 API (더 제한적)
+    - name: search
+      path-pattern: /api/search/**
+      capacity: 20
+      refill-tokens: 20
+      refill-duration-sec: 60
+      type: USER
+
+# 암호화 설정
+crypto:
+  enabled: true
+  secret-key: ${CRYPTO_SECRET_KEY:1234567890abcdef1234567890abcdef} # 32바이트 비밀키 (환경변수로 설정하거나 프로덕션에서는 Vault 등 사용 권장)

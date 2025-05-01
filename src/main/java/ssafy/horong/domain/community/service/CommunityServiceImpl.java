@@ -28,6 +28,9 @@ import ssafy.horong.domain.member.repository.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
+import org.springframework.cache.annotation.Cacheable;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -77,7 +80,7 @@ public class CommunityServiceImpl implements CommunityService {
     @Transactional
     public void updatePost(UpdatePostCommand command) {
         validatePostCreateRequest(command.content());
-        Post post = postRepository.findById(command.postId())
+        Post post = postRepository.findByIdWithPessimisticLock(command.postId())
                 .orElseThrow(PostNotFoundException::new);
 
         Map<Language, ContentByLanguage> titleContentMap = mapContentByLanguage(post, TITLE);
@@ -248,34 +251,36 @@ public class CommunityServiceImpl implements CommunityService {
 
     @Override
     public List<GetAllMessageListResponse> getAllMessageList() {
-        List<MessageRoom> messageRooms = messageRoomRepository.findAllByUser(userUtil.getCurrentUser());
-        log.info("모든 채팅방 조회: {}", messageRooms);
-
-        return messageRooms.stream()
-                .map(messageRoom -> {
-                    User opponent = messageRoom.getOpponent(userUtil.getCurrentUser());
-                    List<Message> messages = messageRoom.getMessages();
-
-                    long unreadCount = messageRepository.countUnreadMessagesForOpponent(messageRoom, userUtil.getCurrentUser());
-
-                    messages.sort(Comparator.comparing(Message::getCreatedAt).reversed());
-
-                    Message lastMessage = messages.get(0);
-                    String lastContent = getContentByLanguage(lastMessage.getContentByCountries(), userUtil.getCurrentUser().getLanguage());
-
-                    return new GetAllMessageListResponse(
-                            messageRoom.getId(),
-                            unreadCount,
-                            lastContent,
-                            opponent.getNickname(),
-                            opponent.getId(),
-                            s3Util.getProfilePresignedUrlFromS3(opponent.getProfileImg()),
-                            lastMessage.getCreatedAt().toString(),
-                            messageRoom.getPost().getId()
-                    );
-                })
-                .sorted(Comparator.comparing(GetAllMessageListResponse::createdAt).reversed())
-                .toList();
+        Long userId = userUtil.getCurrentUser().getId();
+        List<MessageRoomInfo> messageRoomInfos = messageRoomRepository.findAllMessageRoomInfoByUserId(userId);
+        
+        return messageRoomInfos.stream()
+            .map(info -> {
+                // 각 채팅방의 최신 메시지 1개만 조회
+                Page<Message> latestMessages = messageRepository.findLatestMessageByRoomId(
+                    info.getRoomId(), PageRequest.of(0, 1, Sort.by(Sort.Direction.DESC, "createdAt")));
+                
+                Message lastMessage = latestMessages.isEmpty() ? null : latestMessages.getContent().get(0);
+                String lastContent = "";
+                if (lastMessage != null) {
+                    lastContent = getContentByLanguage(lastMessage.getContentByCountries(), userUtil.getCurrentUser().getLanguage());
+                }
+                
+                long unreadCount = messageRepository.countUnreadMessagesForOpponent(info.getRoomId(), userId);
+                
+                return new GetAllMessageListResponse(
+                    info.getRoomId(),
+                    unreadCount,
+                    lastContent,
+                    info.getOpponentNickname(),
+                    info.getOpponentId(),
+                    s3Util.getProfilePresignedUrlFromS3(info.getOpponentProfileImg()),
+                    lastMessage != null ? lastMessage.getCreatedAt().toString() : "",
+                    info.getPostId()
+                );
+            })
+            .sorted(Comparator.comparing(GetAllMessageListResponse::createdAt).reversed())
+            .toList();
     }
 
     @Transactional
@@ -351,49 +356,33 @@ public class CommunityServiceImpl implements CommunityService {
     public Page<GetPostResponse> getPostList(Pageable pageable, String boardType) {
         log.info("모든 게시글 조회 (페이지네이션)");
 
-        // 1. 데이터베이스에서 정렬을 처리하도록 Pageable에 정렬 조건 추가
+        // 정렬 조건을 포함한 페이지네이션
         Pageable sortedPageable = PageRequest.of(
                 pageable.getPageNumber(),
                 pageable.getPageSize(),
                 Sort.by(Sort.Direction.DESC, "createdAt")
         );
-
-        // 2. 데이터베이스에서 게시글 목록을 가져옴 (필터링은 DB에서 처리할 수도 있음)
-        Page<Post> postPage = postRepository.findByType(BoardType.valueOf(boardType), sortedPageable);
-
-        // 현재 사용자의 언어 가져오기
-        Language language = userUtil.getCurrentUser().getLanguage();
-
-        // 3. 스트림을 사용해 각 게시글을 GetPostResponse로 변환
-        List<GetPostResponse> postResponses = postPage.getContent().stream()
-                .filter(post -> post.getDeletedAt() == null)  // 삭제되지 않은 게시글만 필터링
-                .map(post -> {
-                    String content = getContentByLanguage(post, language, CONTENT);
-                    String title = getContentByLanguage(post, language, TITLE);
-
-                    // 댓글도 정렬해서 변환
-                    List<GetCommentResponse> commentResponses = convertToCommentResponse(
-                            post.getComments().stream()
-                                    .sorted(Comparator.comparing(Comment::getCreatedAt).reversed())  // 댓글을 최신순으로 정렬
-                                    .toList()
-                    );
-
-                    // 4. S3에서 프로필 이미지를 가져오는 부분은 캐싱하거나 비동기 처리 고려 가능
-                    return new GetPostResponse(
-                            post.getId(),
-                            title,
-                            post.getAuthor().getNickname(),
-                            post.getAuthor().getId(),
-                            content,
-                            post.getCreatedAt().toString(),
-                            commentResponses,
-                            s3Util.getProfilePresignedUrlFromS3(post.getAuthor().getProfileImg())
-                    );
-                })
-                .toList();
-
-        // 5. PageImpl로 반환 (총 게시글 수 포함)
-        return new PageImpl<>(postResponses, sortedPageable, postPage.getTotalElements());
+        
+        // 삭제되지 않은 게시글만 DB에서 필터링하여 조회
+        Page<Post> postPage = postRepository.findByTypeAndDeletedAtIsNull(BoardType.valueOf(boardType), sortedPageable);
+        
+        // map을 사용해 Page 객체 변환
+        return postPage.map(post -> {
+            String content = getContentByLanguage(post, userUtil.getCurrentUser().getLanguage(), CONTENT);
+            String title = getContentByLanguage(post, userUtil.getCurrentUser().getLanguage(), TITLE);
+            
+            // 댓글 정보는 포함하지 않고 필요시 별도 API로 조회
+            return new GetPostResponse(
+                    post.getId(),
+                    title,
+                    post.getAuthor().getNickname(),
+                    post.getAuthor().getId(),
+                    content,
+                    post.getCreatedAt().toString(),
+                    Collections.emptyList(), // 댓글은 별도 조회
+                    s3Util.getProfilePresignedUrlFromS3(post.getAuthor().getProfileImg())
+            );
+        });
     }
 
     @Override
@@ -401,47 +390,61 @@ public class CommunityServiceImpl implements CommunityService {
         String keyword = command.keyword();
         log.info("Elasticsearch 검색 시작: keyword={}", keyword);
 
-        String[] terms = keyword.split("\\s+");
-        String userLanguage = userUtil.getCurrentUser().getLanguage().name();
+        // 불필요한 빈 검색어 제거
+        String[] filteredTerms = Arrays.stream(keyword.split("\\s+"))
+            .filter(term -> !term.isBlank())
+            .toArray(String[]::new);
+        
+        if (filteredTerms.length == 0) {
+            return Page.empty(pageable);
+        }
 
-        Set<PostDocument> uniqueDocuments = Arrays.stream(terms)
-                .flatMap(term -> postElasticsearchRepository.findByTitleKoOrTitleZhOrTitleJaOrTitleEnOrAuthorOrContentKoOrContentZhOrContentJaOrContentEn(
-                        term, term, term, term, term, term, term, term, term
-                ).stream())
-                .collect(Collectors.toSet());
-
-        log.info("Elasticsearch 검색 결과: {}", uniqueDocuments);
-
+        // 검색 실행
+        Set<PostDocument> uniqueDocuments = new HashSet<>();
+        for (String term : filteredTerms) {
+            uniqueDocuments.addAll(postElasticsearchRepository.findByTitleKoOrTitleZhOrTitleJaOrTitleEnOrAuthorOrContentKoOrContentZhOrContentJaOrContentEn(
+                term, term, term, term, term, term, term, term, term
+            ));
+        }
+        
+        log.info("Elasticsearch 검색 결과: {}", uniqueDocuments.size());
+        
         List<GetPostResponse> postResponses = uniqueDocuments.stream()
-                .map(postDocument -> {
-                    String content = getContentByUserLanguage(postDocument, userLanguage, false);
-                    String title = getContentByUserLanguage(postDocument, userLanguage, true);
-
-                    Post post = postRepository.findById(postDocument.getPostId()).orElse(null);
-                    String createdAt = post != null ? post.getCreatedAt().toString() : "";
-
-                    User author = userRepository.findByNicknameAndIsDeletedFalse(postDocument.getAuthor()).orElse(null);
-
-                    return new GetPostResponse(
-                            postDocument.getPostId(),
-                            title,
-                            postDocument.getAuthor(),
-                            author != null ? author.getId() : null,
-                            content,
-                            createdAt,
-                            List.of(),
-                            s3Util.getProfilePresignedUrlFromS3(post.getAuthor().getProfileImg())
-                    );
-                })
-                .sorted(Comparator.comparing(GetPostResponse::createdAt).reversed())
-                .toList();
-
+            .map(doc -> {
+                Post post = postRepository.findById(doc.getPostId()).orElse(null);
+                if (post == null || post.getDeletedAt() != null) {
+                    return null;
+                }
+                
+                return convertPostDocumentToResponse(doc, post);
+            })
+            .filter(Objects::nonNull)
+            .toList();
+        
         return new PageImpl<>(postResponses, pageable, uniqueDocuments.size());
     }
+    
+    private GetPostResponse convertPostDocumentToResponse(PostDocument doc, Post post) {
+        String userLanguage = userUtil.getCurrentUser().getLanguage().name();
+        String content = getContentByUserLanguage(doc, userLanguage, false);
+        String title = getContentByUserLanguage(doc, userLanguage, true);
+        
+        return new GetPostResponse(
+            doc.getPostId(),
+            title,
+            doc.getAuthor(),
+            post.getAuthor().getId(),
+            content,
+            post.getCreatedAt().toString(),
+            Collections.emptyList(), // 댓글은 필요시 별도 조회
+            s3Util.getProfilePresignedUrlFromS3(post.getAuthor().getProfileImg())
+        );
+    }
 
+    @Cacheable(value = "mainPostList", key = "#userUtil.getCurrentUser().getLanguage()", cacheManager = "redisCacheManager")
     public Map<BoardType, List<GetPostResponse>> getMainPostList() {
-        log.info("게시판별 게시글 리스트 조회");
-
+        log.info("게시판별 게시글 리스트 조회 - 캐시 미스");
+        
         Map<BoardType, List<GetPostResponse>> mainPostList = new EnumMap<>(BoardType.class);
 
         mainPostList.put(BoardType.NOTICE, getPostsByBoardType(BoardType.NOTICE, 3));
@@ -517,46 +520,54 @@ public class CommunityServiceImpl implements CommunityService {
         log.info("특정 게시판 타입별 게시글 조회: {}", boardType);
 
         Language language = userUtil.getCurrentUser().getLanguage();
-
-        Pageable pageable = PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "createdAt"));
-
-        List<Post> posts = postRepository.findByTypeOrderByCreatedAtDesc(boardType, pageable);
-        log.info("{} 게시판에서 가져온 초기 게시글 개수: {}", boardType, posts.size());
-
-        return posts.stream()
-                .filter(post -> post.getDeletedAt() == null)
-                .map(post -> {
-                    String content = getContentByLanguage(post, language, CONTENT);
-                    String title = getContentByLanguage(post, language, TITLE);
-
-                    List<GetCommentResponse> commentResponses = convertToCommentResponse(
-                            post.getComments().stream().sorted(Comparator.comparing(Comment::getCreatedAt).reversed()).toList()
-                    );
-
+        
+        Pageable pageable = PageRequest.of(0, limit);
+        List<Post> posts = postRepository.findByTypeWithAuthorAndContent(boardType, pageable);
+        
+        return posts.parallelStream()
+            .filter(post -> post.getDeletedAt() == null)
+            .map(post -> {
+                String content = getContentByLanguage(post, language, CONTENT);
+                String title = getContentByLanguage(post, language, TITLE);
+                
+                // 비동기로 프로필 이미지 URL 가져오기
+                CompletableFuture<String> profileImageFuture = CompletableFuture.supplyAsync(() -> 
+                    s3Util.getProfilePresignedUrlFromS3(post.getAuthor().getProfileImg())
+                );
+                
+                try {
+                    // 결과 사용 시점에서 대기
+                    String profileUrl = profileImageFuture.get(500, TimeUnit.MILLISECONDS);
                     return new GetPostResponse(
-                            post.getId(),
-                            title,
-                            post.getAuthor().getNickname(),
-                            post.getAuthor().getId(),
-                            content,
-                            post.getCreatedAt().toString(),
-                            commentResponses,
-                            s3Util.getProfilePresignedUrlFromS3(post.getAuthor().getProfileImg())
+                        post.getId(), title, post.getAuthor().getNickname(), post.getAuthor().getId(),
+                        content, post.getCreatedAt().toString(), Collections.emptyList(), profileUrl
                     );
-                })
-                .sorted(Comparator.comparing(GetPostResponse::createdAt).reversed())
-                .toList();
+                } catch (Exception e) {
+                    log.warn("프로필 이미지 로딩 실패", e);
+                    return new GetPostResponse(
+                        post.getId(), title, post.getAuthor().getNickname(), post.getAuthor().getId(),
+                        content, post.getCreatedAt().toString(), Collections.emptyList(), null
+                    );
+                }
+            })
+            .toList();
     }
 
     public String saveImageToS3(MultipartFile file) {
         return s3Util.uploadToS3(file, UUID.randomUUID().toString(), "community/");
     }
 
+    // 정규식 기반 HTML 태그 제거 (간단한 경우)
+    private String stripHtml(String html) {
+        if (html == null) return null;
+        return html.replaceAll("<[^>]*>", "");
+    }
+
+    // 성능 개선된 검증 메서드
     public void validatePostCreateRequest(List<CreateContentByLanguageRequest> contents) {
         for (CreateContentByLanguageRequest request : contents) {
             String rawContent = Optional.ofNullable(request.content()).orElse("");
-            String safeContent = Jsoup.clean(rawContent, Safelist.none());
-            String plainText = escapeHtml(safeContent);
+            String plainText = stripHtml(rawContent);
 
             if (plainText.length() > 255) {
                 throw new ContentTooLongException();

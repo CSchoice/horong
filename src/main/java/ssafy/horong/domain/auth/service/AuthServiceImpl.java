@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Optional;
 
+import static ssafy.horong.common.constant.redis.KEY_PREFIX.ACCESS_TOKEN;
 import static ssafy.horong.common.constant.redis.KEY_PREFIX.REFRESH_TOKEN;
 
 @Slf4j
@@ -87,7 +88,7 @@ public class AuthServiceImpl implements AuthService {
 
 
         tokens = generateTokens(user);
-        jwtProcessor.saveRefreshToken(tokens);
+        jwtProcessor.saveRefreshToken(tokens, user);
 
         return AuthResponse.of(tokens.accessToken(), tokens.refreshToken());
     }
@@ -100,7 +101,13 @@ public class AuthServiceImpl implements AuthService {
 
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
             String token = authorizationHeader.substring(7);
-            jwtProcessor.expireToken(token);
+            // 토큰에서 사용자 ID를 추출
+            DecodedJwtToken decodedJwtToken = jwtProcessor.decodeToken(token, ACCESS_TOKEN);
+            Long userId = decodedJwtToken.memberId();
+            
+            // 사용자의 모든 리프레시 토큰 만료 처리
+            int expiredTokenCount = jwtProcessor.expireAllUserTokens(userId);
+            log.info("사용자 ID: {}의 로그아웃 처리되었습니다. 만료된 토큰 수: {}", userId, expiredTokenCount);
         } else {
             throw new IllegalArgumentException("Invalid or missing Authorization header");
         }
@@ -109,21 +116,36 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public AuthResponse refresh(TokenRefreshRequest request) {
-        log.info("[AuthService] Access 토큰 발급 >>>> Refresh 토큰: {}", request.refreshToken());
-        DecodedJwtToken decodedJwtToken = jwtProcessor.decodeToken(request.refreshToken(), REFRESH_TOKEN);
-        User user = findMemberById(decodedJwtToken)
+        log.info("[AuthService] 토큰 갱신 시작 >>>> Refresh 토큰: {}", request.refreshToken());
+        
+        // 1. 리프레시 토큰으로 사용자 ID 조회 및 검증
+        Long userId = jwtProcessor.findUserIdByRefreshToken(request.refreshToken());
+        User user = userRepository.findById(userId)
                 .orElseThrow(InvalidTokenException::new);
+        
+        // 2. 리프레시 토큰 유효성 검증
+        DecodedJwtToken decodedJwtToken = jwtProcessor.decodeToken(request.refreshToken(), REFRESH_TOKEN);
+        if (!decodedJwtToken.memberId().equals(userId)) {
+            throw new InvalidTokenException();
+        }
+        
         try {
+            // 3. 기존 리프레시 토큰 즉시 블랙리스트 처리 (1회용 적용)
+            jwtProcessor.invalidateRefreshToken(request.refreshToken());
+            
+            // 4. 새 액세스 토큰과 리프레시 토큰 발급
             String newAccessToken = jwtProcessor.generateAccessToken(user);
             String newRefreshToken = jwtProcessor.generateRefreshToken(user);
-            jwtProcessor.renewRefreshToken(request.refreshToken(), newRefreshToken, user);
+            
+            // 5. 새 리프레시 토큰 저장
+            jwtProcessor.saveRefreshToken(newRefreshToken, user.getId());
+            
+            log.info("[AuthService] 토큰 갱신 완료 - 새로운 리프레시 토큰 발급됨");
             return AuthResponse.of(newAccessToken, newRefreshToken);
-        }
-        catch (Exception e) {
-            log.error("[AuthService] Access 토큰 발급 중 오류 발생", e);
+        } catch (Exception e) {
+            log.error("[AuthService] 토큰 갱신 중 오류 발생", e);
             throw new TokenSaveFailedException();
         }
-
     }
 
     private Optional<User> findMemberByUserId(String userId) {

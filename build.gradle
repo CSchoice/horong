@@ -19,6 +19,8 @@ configurations {
     compileOnly {
         extendsFrom annotationProcessor
     }
+    // commons-logging 충돌 해결
+    all*.exclude group: 'commons-logging', module: 'commons-logging'
 }
 
 repositories {
@@ -75,6 +77,8 @@ dependencies {
     //엘셀파일
     implementation 'org.apache.poi:poi:5.2.3'
     implementation 'org.apache.poi:poi-ooxml:5.2.3'
+    
+    // Rate Limiting (사용자 정의 구현)
 }
 
 dependencyManagement {
