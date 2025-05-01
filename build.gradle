@@ -103,12 +103,22 @@ sonarqube {
     }
 }
 
+sonarqube {
+    properties {
+        property "sonar.projectKey", project.findProperty("sonar.projectKey")
+        property "sonar.host.url", project.findProperty("sonar.host.url")
+        property "sonar.token", project.findProperty("sonar.token")
+    }
+}
+
+task printApiKey {
+    doLast {
+        println "API Key: ${project.findProperty('myApiKey')}"
+    }
+}
+
 dependencyManagement {
     imports {
         mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
     }
-}
-
-tasks.named('test') {
-    useJUnitPlatform()
 }
