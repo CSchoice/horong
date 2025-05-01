@@ -3,6 +3,7 @@ plugins {
     id 'org.springframework.boot' version '3.3.4'
     id 'io.spring.dependency-management' version '1.1.6'
     id 'org.jetbrains.kotlin.jvm'
+    id "org.sonarqube" version "6.0.1.5171"
 }
 
 group = 'ssafy'
@@ -80,6 +81,26 @@ dependencies {
     implementation 'org.apache.poi:poi-ooxml:5.2.3'
     
     // Rate Limiting (사용자 정의 구현)
+}
+
+sonarqube {
+    properties {
+        def sonarProjectKey = System.getenv("SONAR_PROJECT_KEY")
+        def sonarHostUrl = System.getenv("SONAR_HOST_URL")
+        def sonarLogin = System.getenv("SONAR_TOKEN")
+        println "[DEBUG] SONAR_PROJECT_KEY = ${System.getenv("SONAR_PROJECT_KEY")}"
+        println "[DEBUG] SONAR_HOST_URL    = ${System.getenv("SONAR_HOST_URL")}"
+        println "[DEBUG] SONAR_TOKEN       = ${System.getenv("SONAR_TOKEN")}"
+
+        if (!sonarProjectKey || !sonarHostUrl || !sonarLogin) {
+            throw new GradleException("필수 SonarQube 환경변수가 누락되었습니다.")
+        }
+
+        property "sonar.projectKey", sonarProjectKey
+        property "sonar.host.url", sonarHostUrl
+        property "sonar.login", sonarLogin
+        property "sonar.sourceEncoding", "UTF-8"
+    }
 }
 
 dependencyManagement {
