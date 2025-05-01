@@ -1,4 +1,4 @@
-package ssafy.horong.domain.shortform.service;
+package ssafy.horong.domain.shortForm.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -6,14 +6,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
-import ssafy.horong.api.shortform.response.ShortFormListResponse;
-import ssafy.horong.api.shortform.response.ShortFormResponse;
+import ssafy.horong.api.shortForm.response.ShortFormListResponse;
+import ssafy.horong.api.shortForm.response.ShortFormResponse;
 import ssafy.horong.common.exception.data.DataNotFoundException;
 import ssafy.horong.common.properties.WebClientProperties;
 import ssafy.horong.common.util.UserUtil;
-import ssafy.horong.domain.shortform.command.ModifyIsSavedCommand;
-import ssafy.horong.domain.shortform.command.ModifyPreferenceCommand;
-import ssafy.horong.domain.shortform.command.SaveShortFormLogCommand;
+import ssafy.horong.domain.shortForm.command.ModifyIsSavedCommand;
+import ssafy.horong.domain.shortForm.command.ModifyPreferenceCommand;
+import ssafy.horong.domain.shortForm.command.SaveShortFormLogCommand;
 
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -26,13 +26,13 @@ import java.util.Map;
 @Transactional(readOnly = true)
 public class ShortFormServiceImpl implements ShortFormService {
     // API 엔드포인트 상수
-    private static final String ENDPOINT_SHORTFORM = "/shortform/";
-    private static final String ENDPOINT_PREFERENCE = "/shortform/preference/";
-    private static final String ENDPOINT_IS_SAVED = "/shortform/is_saved/";
-    private static final String ENDPOINT_LOG = "/shortform/log";
+    private static final String ENDPOINT_SHORTFORM = "/shortForm/";
+    private static final String ENDPOINT_PREFERENCE = "/shortForm/preference/";
+    private static final String ENDPOINT_IS_SAVED = "/shortForm/is_saved/";
+    private static final String ENDPOINT_LOG = "/shortForm/log";
     
     // 요청/응답 파라미터 이름 상수
-    private static final String PARAM_SHORTFORM_ID = "shortform_id";
+    private static final String PARAM_SHORTFORM_ID = "shortForm_id";
     private static final String PARAM_USER_ID = "user_id";
     private static final String PARAM_PREFERENCE = "preference";
     private static final String PARAM_IS_SAVED = "is_saved";
@@ -139,17 +139,17 @@ public class ShortFormServiceImpl implements ShortFormService {
 
     public List<ShortFormResponse> getShortFormList() {
         Long userId = userUtil.getCurrentUser().getId();
-        return executeGetRequestForList(ENDPOINT_SHORTFORM + userId, ShortFormResponse.class);
+        return executeGetRequestForList(ENDPOINT_SHORTFORM + userId, ssafy.horong.api.shortForm.response.ShortFormResponse.class);
     }
 
     public List<ShortFormResponse> getPreferenceList() {
         Long userId = userUtil.getCurrentUser().getId();
-        return executeGetRequestForList(ENDPOINT_PREFERENCE + userId, ShortFormResponse.class);
+        return executeGetRequestForList(ENDPOINT_PREFERENCE + userId, ssafy.horong.api.shortForm.response.ShortFormResponse.class);
     }
 
     public List<ShortFormResponse> getLikedList() {
         Long userId = userUtil.getCurrentUser().getId();
-        return executeGetRequestForList(ENDPOINT_IS_SAVED + userId, ShortFormResponse.class);
+        return executeGetRequestForList(ENDPOINT_IS_SAVED + userId, ssafy.horong.api.shortForm.response.ShortFormResponse.class);
     }
 
     public ShortFormListResponse getShortFormDetail(Long shortFormId) {

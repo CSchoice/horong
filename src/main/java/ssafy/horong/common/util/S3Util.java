@@ -192,7 +192,6 @@ public class S3Util {
     }
 
     private GetObjectPresignRequest createGetObjectPresignRequest(GetObjectRequest getObjectRequest) {
-        final Duration URL_EXPIRATION = Duration.ofMinutes(10);
         return GetObjectPresignRequest.builder()
                 .getObjectRequest(getObjectRequest)
                 .signatureDuration(URL_EXPIRATION)

@@ -41,6 +41,17 @@ import static ssafy.horong.domain.community.entity.ContentByLanguage.ContentType
 @Transactional(readOnly = true)
 public class CommunityServiceImpl implements CommunityService {
 
+    // 상수 정의
+    private static final String COMMUNITY_PATH = "community/";
+    private static final String ERROR_MESSAGE_POST_NOT_FOUND = "Post content not found";
+    private static final String DELETED_COMMENT_AUTHOR = "deleted";
+    private static final String DELETED_COMMENT_CONTENT = "삭제된 댓글입니다.";
+    private static final int PROFILE_IMAGE_TIMEOUT_MS = 500;
+    private static final int CONTENT_MAX_LENGTH = 255;
+    private static final int NOTICE_POST_LIMIT = 3;
+    private static final int FREE_POST_LIMIT = 6;
+    private static final int REGIONAL_POST_LIMIT = 1;
+
     private final BoardRepository postRepository;
     private final CommentRepository commentRepository;
     private final UserRepository userRepository;
@@ -445,12 +456,12 @@ public class CommunityServiceImpl implements CommunityService {
         
         Map<BoardType, List<GetPostResponse>> mainPostList = new EnumMap<>(BoardType.class);
 
-        mainPostList.put(BoardType.NOTICE, getPostsByBoardType(BoardType.NOTICE, 3));
-        mainPostList.put(BoardType.FREE, getPostsByBoardType(BoardType.FREE, 6));
-        mainPostList.put(BoardType.SEOUL, getPostsByBoardType(BoardType.SEOUL, 1));
-        mainPostList.put(BoardType.BUSAN, getPostsByBoardType(BoardType.BUSAN, 1));
-        mainPostList.put(BoardType.INCHEON, getPostsByBoardType(BoardType.INCHEON, 1));
-        mainPostList.put(BoardType.GYEONGGI, getPostsByBoardType(BoardType.GYEONGGI, 1));
+        mainPostList.put(BoardType.NOTICE, getPostsByBoardType(BoardType.NOTICE, NOTICE_POST_LIMIT));
+        mainPostList.put(BoardType.FREE, getPostsByBoardType(BoardType.FREE, FREE_POST_LIMIT));
+        mainPostList.put(BoardType.SEOUL, getPostsByBoardType(BoardType.SEOUL, REGIONAL_POST_LIMIT));
+        mainPostList.put(BoardType.BUSAN, getPostsByBoardType(BoardType.BUSAN, REGIONAL_POST_LIMIT));
+        mainPostList.put(BoardType.INCHEON, getPostsByBoardType(BoardType.INCHEON, REGIONAL_POST_LIMIT));
+        mainPostList.put(BoardType.GYEONGGI, getPostsByBoardType(BoardType.GYEONGGI, REGIONAL_POST_LIMIT));
 
         return mainPostList;
     }
@@ -535,7 +546,7 @@ public class CommunityServiceImpl implements CommunityService {
                 
                 try {
                     // 결과 사용 시점에서 대기
-                    String profileUrl = profileImageFuture.get(500, TimeUnit.MILLISECONDS);
+                    String profileUrl = profileImageFuture.get(PROFILE_IMAGE_TIMEOUT_MS, TimeUnit.MILLISECONDS);
                     return new GetPostResponse(
                         post.getId(), title, post.getAuthor().getNickname(), post.getAuthor().getId(),
                         content, post.getCreatedAt().toString(), Collections.emptyList(), profileUrl
@@ -574,7 +585,7 @@ public class CommunityServiceImpl implements CommunityService {
             String rawContent = Optional.ofNullable(request.content()).orElse("");
             String plainText = stripHtml(rawContent);
 
-            if (plainText.length() > 255) {
+            if (plainText.length() > CONTENT_MAX_LENGTH) {
                 throw new ContentTooLongException();
             }
         }
@@ -622,9 +633,9 @@ public class CommunityServiceImpl implements CommunityService {
                     if (comment.getDeletedAt() != null) {
                         return new GetCommentResponse(
                                 null,
-                                "deleted",
+                                DELETED_COMMENT_AUTHOR,
                                 null,
-                                "삭제된 댓글입니다.",
+                                DELETED_COMMENT_CONTENT,
                                 null,
                                 null
                         );
@@ -688,7 +699,6 @@ public class CommunityServiceImpl implements CommunityService {
         return imageRequests.stream()
                 .map(ContentImageRequest::imageUrl)
                 .map(imageUrl -> {
-                    final String COMMUNITY_PATH = "community/";
                     return imageUrl.substring(imageUrl.indexOf(COMMUNITY_PATH));
                 })
                 .map(trimmedUrl -> ContentImage.builder().imageUrl(trimmedUrl).build())
@@ -699,7 +709,6 @@ public class CommunityServiceImpl implements CommunityService {
         return imageRequests.stream()
                 .map(ContentImageRequest::imageUrl)
                 .map(imageUrl -> {
-                    final String COMMUNITY_PATH = "community/";
                     return imageUrl.substring(imageUrl.indexOf(COMMUNITY_PATH));
                 })
                 .map(trimmedUrl -> ContentImage.builder().imageUrl(trimmedUrl).build())
@@ -769,7 +778,6 @@ public class CommunityServiceImpl implements CommunityService {
                 List<ContentImage> existingImages = existingMainContent.getContentImages();
                 List<String> newImageUrls = command.contentImageRequest().stream()
                         .map(imageRequest -> {
-                            final String COMMUNITY_PATH = "community/";
                             return imageRequest.imageUrl().substring(imageRequest.imageUrl().indexOf(COMMUNITY_PATH));
                         })
                         .toList();
@@ -851,12 +859,11 @@ public class CommunityServiceImpl implements CommunityService {
     }
 
     private String getContentByLanguage(Post post, Language language, ContentByLanguage.ContentType contentType) {
-        final String ERROR_MESSAGE = "Post content not found";
         return post.getContentByCountries().stream()
                 .filter(c -> c.getLanguage() == language && c.getContentType() == contentType)
                 .findFirst()
                 .map(ContentByLanguage::getContent)
-                .orElseThrow(() -> new PostNotFoundException(ERROR_MESSAGE));
+                .orElseThrow(() -> new PostNotFoundException(ERROR_MESSAGE_POST_NOT_FOUND));
     }
 
     private String getContentByLanguage(List<ContentByLanguage> contents, Language language) {
