@@ -11,7 +11,6 @@ import ssafy.horong.api.shortForm.request.ModifyIsSavedRequest;
 import ssafy.horong.api.shortForm.request.ModifyPreferenceRequest;
 import ssafy.horong.api.shortForm.request.SaveShortFormLogRequest;
 import ssafy.horong.api.shortForm.response.ShortFormListResponse;
-import ssafy.horong.api.shortForm.response.ShortFormResponse;
 import ssafy.horong.domain.shortForm.service.ShortFormService;
 
 import java.util.List;
@@ -28,24 +27,24 @@ public class ShortFormController {
     @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     @Operation(summary = "숏폼 리스트 조회", description = "로그인한 사용자의 숏폼 리스트를 조회합니다.")
     @GetMapping("")
-    public CommonResponse<List<ShortFormResponse>> getShortFormList() {
-        List<ShortFormResponse> response = shortFormService.getShortFormList();
+    public CommonResponse<List<ssafy.horong.api.shortform.response.ShortFormResponse>> getShortFormList() {
+        List<ssafy.horong.api.shortform.response.ShortFormResponse> response = shortFormService.getShortFormList();
         return CommonResponse.ok(response);
     }
 
     @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     @Operation(summary = "숏폼 리스트 조회", description = "로그인한 사용자의 숏폼 리스트를 조회합니다.")
     @GetMapping("preferences")
-    public CommonResponse<List<ShortFormResponse>> getPreferenceList() {
-        List<ShortFormResponse> response = shortFormService.getPreferenceList();
+    public CommonResponse<List<ssafy.horong.api.shortform.response.ShortFormResponse>> getPreferenceList() {
+        List<ssafy.horong.api.shortform.response.ShortFormResponse> response = shortFormService.getPreferenceList();
         return CommonResponse.ok(response);
     }
 
     @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
     @Operation(summary = "숏폼 리스트 조회", description = "로그인한 사용자의 숏폼 리스트를 조회합니다.")
     @GetMapping("liked")
-    public CommonResponse<List<ShortFormResponse>> getLikedList() {
-        List<ShortFormResponse> response = shortFormService.getLikedList();
+    public CommonResponse<List<ssafy.horong.api.shortform.response.ShortFormResponse>> getLikedList() {
+        List<ssafy.horong.api.shortform.response.ShortFormResponse> response = shortFormService.getLikedList();
         return CommonResponse.ok(response);
     }
 

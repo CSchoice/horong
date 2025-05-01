@@ -9,7 +9,6 @@ import ssafy.horong.api.community.response.NotificationResponse;
 import ssafy.horong.api.kafka.producer.KafkaProducerService;
 import ssafy.horong.common.util.NotificationUtil;
 import ssafy.horong.common.util.SecurityUtil;
-import ssafy.horong.common.util.UserUtil;
 import ssafy.horong.domain.community.dto.NotificationKafkaMessage;
 import ssafy.horong.domain.community.entity.Notification;
 import ssafy.horong.domain.community.repository.NotificationRepository;

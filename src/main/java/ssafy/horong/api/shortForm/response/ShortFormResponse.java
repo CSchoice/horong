@@ -1,4 +1,4 @@
-package ssafy.horong.api.shortForm.response;
+package ssafy.horong.api.shortform.response;
 
 public record ShortFormResponse(
         Long id,

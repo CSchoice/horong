@@ -1,7 +1,7 @@
 package ssafy.horong.domain.shortForm.service;
 
 import ssafy.horong.api.shortForm.response.ShortFormListResponse;
-import ssafy.horong.api.shortForm.response.ShortFormResponse;
+import ssafy.horong.api.shortform.response.ShortFormResponse;
 import ssafy.horong.domain.shortForm.command.ModifyIsSavedCommand;
 import ssafy.horong.domain.shortForm.command.SaveShortFormLogCommand;
 import ssafy.horong.domain.shortForm.command.ModifyPreferenceCommand;

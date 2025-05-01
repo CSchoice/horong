@@ -1,15 +1,13 @@
 package ssafy.horong.api.kafka.consumer;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ssafy.horong.api.chat.request.HorongChatContentRequest;
 import ssafy.horong.api.chat.response.HorongChatMessageResponse;
-import ssafy.horong.domain.chat.command.SaveChatLogCommand;
+import ssafy.horong.common.util.NotificationUtil;
 import ssafy.horong.domain.chat.dto.ChatKafkaMessage;
 import ssafy.horong.domain.chat.entity.Chat;
 import ssafy.horong.domain.chat.entity.ChatRoom;
@@ -18,8 +16,6 @@ import ssafy.horong.domain.chat.repository.ChatRoomRepository;
 import ssafy.horong.domain.member.entity.User;
 import ssafy.horong.domain.member.repository.UserRepository;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -33,7 +29,7 @@ public class ChatConsumerService {
     private final ChatRepository chatRepository;
     private final ChatRoomRepository chatRoomRepository;
     private final UserRepository userRepository;
-    private final ObjectMapper objectMapper;
+    private final NotificationUtil notificationUtil;
 
     /**
      * 채팅 메시지를 처리하는 카프카 리스너
