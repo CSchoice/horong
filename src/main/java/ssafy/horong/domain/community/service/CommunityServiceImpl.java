@@ -2,8 +2,6 @@ package ssafy.horong.domain.community.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jsoup.Jsoup;
-import org.jsoup.safety.Safelist;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -541,6 +539,13 @@ public class CommunityServiceImpl implements CommunityService {
                     return new GetPostResponse(
                         post.getId(), title, post.getAuthor().getNickname(), post.getAuthor().getId(),
                         content, post.getCreatedAt().toString(), Collections.emptyList(), profileUrl
+                    );
+                } catch (InterruptedException e) {
+                    log.warn("프로필 이미지 로딩 중 인터럽트 발생", e);
+                    Thread.currentThread().interrupt(); // 인터럽트 상태 복원
+                    return new GetPostResponse(
+                        post.getId(), title, post.getAuthor().getNickname(), post.getAuthor().getId(),
+                        content, post.getCreatedAt().toString(), Collections.emptyList(), null
                     );
                 } catch (Exception e) {
                     log.warn("프로필 이미지 로딩 실패", e);

@@ -157,7 +157,7 @@ public class ShortFormServiceImpl implements ShortFormService {
         // WebClient 호출
         String response = webClient.post()
                 .uri(requestUrl)
-                .body(Mono.just(requestBody), Map.class)
+                .body(Mono.just(requestBody), HashMap.class)
                 .retrieve()
                 .onStatus(
                         status -> status.is4xxClientError() || status.is5xxServerError(),
@@ -188,7 +188,7 @@ public class ShortFormServiceImpl implements ShortFormService {
         // WebClient 호출
         String response = webClient.post()
                 .uri(requestUrl)
-                .body(Mono.just(requestBody), Map.class)
+                .body(Mono.just(requestBody), HashMap.class)
                 .retrieve()
                 .onStatus(
                         status -> status.is4xxClientError() || status.is5xxServerError(),
@@ -220,7 +220,7 @@ public class ShortFormServiceImpl implements ShortFormService {
         // WebClient 호출
         String response = webClient.post()
                 .uri(requestUrl)
-                .body(Mono.just(requestBody), Map.class)
+                .body(Mono.just(requestBody), HashMap.class)
                 .retrieve()
                 .onStatus(
                         status -> status.is4xxClientError() || status.is5xxServerError(),
