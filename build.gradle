@@ -7,7 +7,6 @@ plugins {
 
 group = 'ssafy'
 version = '0.0.1-SNAPSHOT'
-archivesBaseName = 'horong'
 
 java {
     toolchain {
@@ -32,6 +31,8 @@ ext {
 }
 
 dependencies {
+    // 카프카 의존성 추가
+    implementation 'org.springframework.kafka:spring-kafka'
     implementation 'org.springframework.boot:spring-boot-starter-data-elasticsearch'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     implementation 'org.springframework.boot:spring-boot-starter-jdbc'
