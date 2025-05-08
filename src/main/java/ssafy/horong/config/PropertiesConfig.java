@@ -14,6 +14,7 @@ import ssafy.horong.common.properties.*;
         WebClientProperties.class,
         ElasticsearchProperties.class,
         KafkaProperties.class,
+        SpringSecurityProperties.class,
 })
 public class PropertiesConfig {
 }
