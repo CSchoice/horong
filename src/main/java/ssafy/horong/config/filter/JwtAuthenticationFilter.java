@@ -98,4 +98,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         ErrorResponse errorResponse = new ErrorResponse(statusCode, message);
         objectMapper.writeValue(response.getWriter(), errorResponse);
     }
+    
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        String path = request.getRequestURI();
+        String authHeader = request.getHeader("Authorization");
+        
+        // Prometheus 요청에 대해 JWT 필터 건너뛰기
+        if (path.startsWith("/actuator/prometheus")) {
+            return true;
+        }
+        
+        // Basic 인증 요청에 대해 JWT 필터 건너뛰기 (Prometheus는 Basic 인증 사용)
+        if (authHeader != null && authHeader.startsWith("Basic ")) {
+            return true;
+        }
+        
+        return false;
+    }
 }

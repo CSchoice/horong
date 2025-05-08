@@ -3,9 +3,9 @@ spring.cloud.inetutils.preferred-networks: ${INETUTILS_PREFERRED_NETWORKS}
 spring.cloud.inetutils.timeout-seconds: ${INETUTILS_TIMEOUT_SECONDS}
 
 # Spring Security– 임시 비밀번호 생성 방지
-spring.security.user.name: ${ADMIN_USERNAME}
-spring.security.user.password: ${ADMIN_PASSWORD}
-spring.security.user.roles: ${ADMIN_ROLES}
+spring.security.user.name: ${PROMETHEUS_USERNAME}
+spring.security.user.password: ${PROMETHEUS_PASSWORD}
+spring.security.user.roles: ${PROMETHEUS_ROLES}
 
 # 액틀에이터 설정
 management.endpoints.web.exposure.include: ${MANAGEMENT_ENDPOINTS_EXPOSURE}

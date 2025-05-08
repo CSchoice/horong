@@ -14,6 +14,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import org.springframework.security.config.Customizer;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -44,11 +45,12 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfig()))
                 .formLogin(AbstractHttpConfigurer::disable)
                 .logout(AbstractHttpConfigurer::disable)
-                .httpBasic(AbstractHttpConfigurer::disable)
+                .httpBasic(Customizer.withDefaults())  // Prometheus를 위한 Basic 인증 활성화
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(AUTHENTICATED_ONLY).authenticated()
+                        .requestMatchers("/actuator/prometheus").hasRole("PROMETHEUS")  // Prometheus 역할 접근 권한 설정
                         .requestMatchers("/actuator/**").hasRole("ADMIN")
                         .requestMatchers(PathRequest.toH2Console()).permitAll()
                         .anyRequest().permitAll())
