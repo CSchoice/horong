@@ -1,22 +1,22 @@
-# Hostname 감지 실패 해결
-spring.cloud.inetutils.preferred-networks: ${INETUTILS_PREFERRED_NETWORKS}
-spring.cloud.inetutils.timeout-seconds: ${INETUTILS_TIMEOUT_SECONDS}
-
-# Spring Security– 임시 비밀번호 생성 방지
-spring.security.user.name: ${PROMETHEUS_USERNAME}
-spring.security.user.password: ${PROMETHEUS_PASSWORD}
-spring.security.user.roles: ${PROMETHEUS_ROLES}
-
-# 액틀에이터 설정
-management.endpoints.web.exposure.include: ${MANAGEMENT_ENDPOINTS_EXPOSURE}
-management.endpoint.health.show-details: ${MANAGEMENT_HEALTH_SHOW_DETAILS}
-management.endpoint.health.roles: ${MANAGEMENT_HEALTH_ROLES}
 spring:
+  cloud:
+    inetutils:
+      preferred-networks: ${INETUTILS_PREFERRED_NETWORKS}
+      timeout-seconds: ${INETUTILS_TIMEOUT_SECONDS}
+
+  security:
+    user:
+      name: ${PROMETHEUS_USERNAME}
+      password: ${PROMETHEUS_PASSWORD}
+      roles: ${PROMETHEUS_ROLES}
+
+
   cache:
     type: ${CACHE_TYPE}
+
   application:
     name: ${APPLICATION_NAME}
-  # 카프카 설정
+
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
     consumer:
@@ -32,6 +32,7 @@ spring:
       batch-size: ${KAFKA_PRODUCER_BATCH_SIZE}
       linger-ms: ${KAFKA_PRODUCER_LINGER_MS}
       compression-type: ${KAFKA_PRODUCER_COMPRESSION_TYPE}
+
   mail:
     host: ${GMAIL_HOST}
     port: ${GMAIL_PORT}
@@ -64,6 +65,7 @@ spring:
         pool:
           max-active: 8
           max-wait: 20000
+
   elasticsearch:
     username: ${ELASTICSEARCH_USERNAME}
     password: ${ELASTICSEARCH_PASSWORD}
@@ -77,11 +79,22 @@ spring:
       exposed-headers: ${EXPOSED_HEADERS}
       allow-credentials: ${ALLOWED_CREDENTIALS}
       one-hour: ${ONE_HOUR:3600}
+
   servlet:
     multipart:
       enabled: ${MULTIPART_ENABLED}
       max-file-size: ${MULTIPART_MAX_FILE_SIZE}
       max-request-size: ${MULTIPART_MAX_REQUEST_SIZE}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: ${MANAGEMENT_ENDPOINTS_EXPOSURE}
+  endpoint:
+    health:
+      show-details: ${MANAGEMENT_HEALTH_SHOW_DETAILS}
+      roles: ${MANAGEMENT_HEALTH_ROLES}
 
 jwt:
   secret-key: ${SECRET_KEY}
@@ -98,27 +111,21 @@ cloud:
       accessKey: ${S3_ACCESS_KEY}
       secretKey: ${S3_SECRET_KEY}
 
-# Rate Limiting 설정
 rate-limit:
   enabled: ${RATE_LIMIT_ENABLED}
   rules:
-    # 인증/로그인 API
     - name: auth
       path-pattern: ${RATE_LIMIT_AUTH_PATH}
       capacity: ${RATE_LIMIT_AUTH_CAPACITY}
       refill-tokens: ${RATE_LIMIT_AUTH_REFILL_TOKENS}
       refill-duration-sec: ${RATE_LIMIT_AUTH_REFILL_DURATION}
       type: ${RATE_LIMIT_AUTH_TYPE}
-    
-    # 일반 API
     - name: general
       path-pattern: ${RATE_LIMIT_GENERAL_PATH}
       capacity: ${RATE_LIMIT_GENERAL_CAPACITY}
       refill-tokens: ${RATE_LIMIT_GENERAL_REFILL_TOKENS}
       refill-duration-sec: ${RATE_LIMIT_GENERAL_REFILL_DURATION}
       type: ${RATE_LIMIT_GENERAL_TYPE}
-    
-    # 검색 API (더 제한적)
     - name: search
       path-pattern: ${RATE_LIMIT_SEARCH_PATH}
       capacity: ${RATE_LIMIT_SEARCH_CAPACITY}
@@ -126,7 +133,6 @@ rate-limit:
       refill-duration-sec: ${RATE_LIMIT_SEARCH_REFILL_DURATION}
       type: ${RATE_LIMIT_SEARCH_TYPE}
 
-# 암호화 설정
 crypto:
   enabled: ${CRYPTO_ENABLED}
   secret-key: ${CRYPTO_SECRET_KEY}
