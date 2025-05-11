@@ -20,12 +20,19 @@ import java.util.List;
 @AllArgsConstructor(access = AccessLevel.PROTECTED)  // 모든 필드를 포함한 생성자 (protected)
 public class User {
 
+    // 8바이트 필드
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Convert(converter = StringEncryptConverter.class)
-    @Column(nullable = false, length = 255)  // 암호화 후 크기가 커질 수 있으므로 길이 조정
+    // 날짜 필드 (8바이트)
+    @Column(nullable = false)
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+    private LocalDateTime deletedAt;
+
+    // 문자열 필드 (참조 8바이트)
+    @Column(nullable = false, length = 16)
     private String userId;
 
     @Column(nullable = false, length = 20)
@@ -37,25 +44,21 @@ public class User {
     @Column(length = 40)
     private String profileImg; // s3 링크 저장
 
+    // 참조 타입 필드 (8바이트 참조)
+    @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Post> boards;
+
+    // enum 필드 (4바이트 또는 참조 크기)
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Language language; // enum 타입
 
-    @Column(nullable = false)
-    private boolean isDeleted;
-
-    @Column(nullable = false)
-    private LocalDateTime createdAt;
-
-    private LocalDateTime updatedAt;
-
-    private LocalDateTime deletedAt;
-
     @Enumerated(EnumType.STRING)
     private MemberRole role;
 
-    @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Post> boards;
+    // 1바이트 필드 (마지막에 배치하여 패딩 최소화)
+    @Column(nullable = false)
+    private boolean isDeleted;
 
     @Builder
     public User(String password, String nickname, String image) {

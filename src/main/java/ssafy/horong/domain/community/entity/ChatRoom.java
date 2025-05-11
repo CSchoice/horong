@@ -12,23 +12,24 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class MessageRoom {
+public class ChatRoom {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
+    
+    // 참조 타입 필드 (8바이트 참조)
     @ManyToOne
     private Post post;
-
+    
     @ManyToOne
     @JoinColumn(name = "host_id", nullable = false)
     private User host;
-
+    
     @ManyToOne
     @JoinColumn(name = "guest_id", nullable = false)
     private User guest;
 
-    @OneToMany(mappedBy = "messageRoom", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "chatRoom", cascade = CascadeType.ALL)
     private List<Message> messages;
 
     /**

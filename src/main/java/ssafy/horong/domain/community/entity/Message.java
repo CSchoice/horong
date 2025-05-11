@@ -13,25 +13,29 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Message {
+    // 8바이트 필드
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-    @OneToMany(mappedBy = "message", cascade = CascadeType.ALL)
-    private List<ContentByLanguage> contentByCountries;
-
+    
+    // 날짜 필드 (8바이트)
+    @Column(name = "created_at", nullable = false)
+    private LocalDateTime createdAt;
+    
+    // 참조 타입 필드 (8바이트 참조)
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
-
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
-
-    private boolean isRead;
-
+    
     @ManyToOne
     @JoinColumn(name = "chat_room_id")
-    private MessageRoom messageRoom;
+    private ChatRoom chatRoom;
+    
+    @OneToMany(mappedBy = "message", cascade = CascadeType.ALL)
+    private List<ContentByLanguage> contentByCountries;
+    
+    // 1바이트 필드 (마지막에 배치하여 패딩 최소화)
+    private boolean isRead;
 
     @PrePersist
     protected void onCreate() {
@@ -49,9 +53,9 @@ public class Message {
 
     // Builder 패턴을 위한 Builder 내부 클래스 정의
     @Builder
-    public Message(List<ContentByLanguage> contentByCountries, User user, MessageRoom messageRoom) {
+    public Message(List<ContentByLanguage> contentByCountries, User user, ChatRoom chatRoom) {
         this.contentByCountries = contentByCountries;
         this.user = user;
-        this.messageRoom = messageRoom;
+        this.chatRoom = chatRoom;
     }
 }
