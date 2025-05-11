@@ -35,13 +35,18 @@ out/
 
 ### VS Code ###
 .vscode/
-
-performance_improvements*.md
-
-docker-compose-kafka.yml
-*kafka.bat
-kafka-integration.md
-
+performance_improvements250425-1.md
+performance_improvements250425.md
+performance_improvements250426-1.md
+performance_improvements250426-2.md
+performance_improvements250426-3.md
+performance_improvements250426-4.md
+performance_improvements250426-5.md
+performance_improvements250426-6.md
+start-kafka.bat
+stop-kafka.bat
 gradle.properties
-.env.dev
-도커
+docker-compose-kafka.yml
+도커/카프카/docker-compose.yml
+도커/소나mysql/docker-compose.yml
+docs/kafka-integration.md
