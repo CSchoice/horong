@@ -2,6 +2,7 @@ package ssafy.horong.domain.community.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -10,7 +11,7 @@ import ssafy.horong.api.community.request.ContentImageRequest;
 import ssafy.horong.api.community.request.CreateContentByLanguageRequest;
 import ssafy.horong.api.community.response.*;
 import ssafy.horong.common.exception.board.*;
-import ssafy.horong.common.util.NotificationUtil;
+import ssafy.horong.common.util.NotificationSseUtil;
 import ssafy.horong.common.util.S3Util;
 import ssafy.horong.common.util.SecurityUtil;
 import ssafy.horong.common.util.UserUtil;
@@ -28,7 +29,6 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import org.springframework.cache.annotation.Cacheable;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -58,7 +58,7 @@ public class CommunityServiceImpl implements CommunityService {
     private final MessageRepository messageRepository;
     private final PostElasticsearchRepository postElasticsearchRepository;
     private final NotificationRepository notificationRepository;
-    private final NotificationUtil notificationUtil;
+    private final NotificationSseUtil notificationSseUtil;
     private final S3Util s3Util;
     private final ContentImageRepository contentImageRepository;
     private final ContentByCountryRepository contentByLanguageRepository;
@@ -818,7 +818,7 @@ public class CommunityServiceImpl implements CommunityService {
             List<NotificationResponse> notificationDTOs = NotificationResponse.convertToNotificationDTOs(combinedNotifications, receiver.getLanguage());
 
             // 사용자에게 DTO로 알림 전송
-            notificationUtil.sendNotificationToUser(notificationDTOs, receiver.getId());
+            notificationSseUtil.sendNotificationToUser(notificationDTOs, receiver.getId());
 
             // 로그 출력
             log.info("알림 목록 전송: {}", notificationDTOs);
@@ -846,7 +846,7 @@ public class CommunityServiceImpl implements CommunityService {
             List<NotificationResponse> notificationDTOs = NotificationResponse.convertToNotificationDTOs(combinedNotifications, receiver.getLanguage());
 
             // 사용자에게 DTO로 알림 전송
-            notificationUtil.sendNotificationToUser(notificationDTOs, receiver.getId());
+            notificationSseUtil.sendNotificationToUser(notificationDTOs, receiver.getId());
 
             // 로그 출력
             log.info("알림 목록 전송: {}", notificationDTOs);

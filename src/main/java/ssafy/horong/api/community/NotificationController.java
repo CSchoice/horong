@@ -7,7 +7,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import ssafy.horong.api.CommonResponse;
-import ssafy.horong.common.util.NotificationUtil;
+import ssafy.horong.common.util.NotificationSseUtil;
 import ssafy.horong.common.util.UserUtil;
 import ssafy.horong.domain.community.entity.Notification;
 import ssafy.horong.domain.community.service.NotificationService;
@@ -22,7 +22,7 @@ import ssafy.horong.domain.member.repository.UserRepository;
 public class NotificationController {
 
     private final NotificationService notificationService;
-    private final NotificationUtil notificationUtil;
+    private final NotificationSseUtil notificationSseUtil;
     private final UserRepository userRepository;
     private final UserUtil userUtil;
 
@@ -38,7 +38,7 @@ public class NotificationController {
     @GetMapping("/stream")
     public SseEmitter streamNotifications() {
         log.info("streamNotifications 메서드 호출됨 - 호출 원인 확인 필요");
-        return notificationUtil.createSseEmitter();
+        return notificationSseUtil.createSseEmitter();
     }
 
     @PreAuthorize("hasAnyRole('ROLE_USER', 'ROLE_ADMIN')")
