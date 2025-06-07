@@ -2,13 +2,18 @@ package ssafy.horong.common.util;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
-import ssafy.horong.domain.community.dto.NotificationKafkaMessage;
 import ssafy.horong.domain.community.entity.Notification;
+import ssafy.horong.domain.community.entity.Notification.NotificationType;
 import ssafy.horong.domain.community.entity.Post;
+import ssafy.horong.domain.community.entity.Message;
 import ssafy.horong.domain.community.repository.NotificationRepository;
+import ssafy.horong.domain.community.dto.NotificationKafkaMessage;
+import ssafy.horong.domain.member.common.Language;
 import ssafy.horong.domain.member.entity.User;
 
-import java.time.LocalDateTime;
+
+import java.util.List;
+import ssafy.horong.api.community.response.NotificationResponse;
 
 /**
  * 알림 관련 유틸리티 클래스
@@ -22,21 +27,20 @@ public class NotificationUtil {
 
     /**
      * 게시물 관련 알림 생성
-     * 
-     * @param sender 알림 발신자
-     * @param receiver 알림 수신자
-     * @param post 관련 게시물
-     * @param type 알림 타입
+     *
+     * @param sender   알림을 보내는 사용자
+     * @param receiver 알림을 받는 사용자
+     * @param post     관련 게시물
+     * @param type     알림 타입
      * @return 생성된 알림
      */
-    public Notification createPostNotification(User sender, User receiver, Post post, String type) {
+    public Notification createPostNotification(User sender, User receiver, Post post, NotificationType type) {
         Notification notification = Notification.builder()
                 .sender(sender)
                 .receiver(receiver)
-                .postId(post.getId())
+                .post(post) // post 필드 설정
                 .type(type)
                 .isRead(false)
-                .createdAt(LocalDateTime.now())
                 .build();
         
         return notificationRepository.save(notification);
@@ -44,39 +48,49 @@ public class NotificationUtil {
 
     /**
      * 메시지 관련 알림 생성
-     * 
-     * @param sender 알림 발신자
-     * @param receiver 알림 수신자
-     * @param messageId 관련 메시지 ID
-     * @param type 알림 타입
+     *
+     * @param sender   알림을 보내는 사용자
+     * @param receiver 알림을 받는 사용자
+     * @param message  관련 메시지
+     * @param type     알림 타입
      * @return 생성된 알림
      */
-    public Notification createMessageNotification(User sender, User receiver, Long messageId, String type) {
+    public Notification createMessageNotification(User sender, User receiver, Message message, NotificationType type) {
         Notification notification = Notification.builder()
                 .sender(sender)
                 .receiver(receiver)
-                .messageId(messageId)
+                .message(message) // message 필드 설정
                 .type(type)
                 .isRead(false)
-                .createdAt(LocalDateTime.now())
                 .build();
         
         return notificationRepository.save(notification);
     }
 
     /**
-     * 알림 메시지 생성
-     * 
+     * 알림을 카프카 메시지로 변환
+     *
      * @param notification 알림 객체
-     * @param language 언어
-     * @return 알림 메시지
+     * @param language     언어 설정
+     * @return 카프카 메시지 객체
      */
-    public NotificationKafkaMessage createNotificationMessage(Notification notification, String language) {
-        return NotificationKafkaMessage.builder()
-                .notificationId(notification.getId())
-                .receiverId(notification.getReceiver().getId())
-                .language(language)
-                .build();
+    public NotificationKafkaMessage createNotificationMessage(Notification notification, Language language) {
+        return NotificationKafkaMessage.fromNotification(notification, language);
+    }
+    
+    /**
+     * 알림 목록을 사용자에게 전송
+     *
+     * @param notifications 알림 응답 목록
+     * @param userId 사용자 ID
+     * @return 카프카 메시지 객체
+     */
+    public NotificationKafkaMessage sendNotificationToUser(List<NotificationResponse> notifications, Long userId) {
+        return NotificationKafkaMessage.of(
+                userId,
+                notifications,
+                NotificationKafkaMessage.NotificationType.NEW_NOTIFICATION
+        );
     }
 
     /**

@@ -2,6 +2,7 @@ package ssafy.horong.domain.education.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import ssafy.horong.domain.common.BaseEntity;
 import ssafy.horong.domain.member.common.Language;
 
 @Entity
@@ -11,10 +12,9 @@ import ssafy.horong.domain.member.common.Language;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class EducationLanguage {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+@EqualsAndHashCode(callSuper = true)
+public class EducationLanguage extends BaseEntity {
+    // id 필드는 BaseEntity에서 상속받음
 
     @ManyToOne
     @JoinColumn(name = "wordId", nullable = false)

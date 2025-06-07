@@ -786,9 +786,8 @@ public class CommunityServiceImpl implements CommunityService {
                     .receiver(receiver)
                     .sender(userUtil.getCurrentUser())
                     .messageContent(messageContent)
-                    .Post(post)
+                    .post(post)
                     .isRead(false)
-                    .createdAt(LocalDateTime.now())
                     .type(type)
                     .build();
             notificationRepository.save(notification);
@@ -814,9 +813,8 @@ public class CommunityServiceImpl implements CommunityService {
                     .receiver(receiver)
                     .sender(userUtil.getCurrentUser())
                     .messageContent(messageContent)
-                    .Message(message)
+                    .message(message)
                     .isRead(false)
-                    .createdAt(LocalDateTime.now())
                     .type(type)
                     .build();
             notificationRepository.save(notification);

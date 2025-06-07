@@ -3,6 +3,7 @@ package ssafy.horong.domain.education.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import ssafy.horong.common.util.ListToStringConverter;
+import ssafy.horong.domain.common.BaseEntity;
 import ssafy.horong.domain.member.entity.User;
 
 import java.time.LocalDate;
@@ -15,10 +16,9 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class EducationRecord {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+@EqualsAndHashCode(callSuper = true)
+public class EducationRecord extends BaseEntity {
+    // id 필드는 BaseEntity에서 상속받음
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
@@ -45,9 +45,4 @@ public class EducationRecord {
 
     @Convert(converter = ListToStringConverter.class)
     private List<Integer> hypIdx;
-
-    @PrePersist
-    public void prePersist() {
-        this.date = LocalDate.now();
-    }
 }

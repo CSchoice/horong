@@ -60,4 +60,13 @@ public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
      * @return 조건에 맞는 채팅방 (존재하는 경우)
      */
     Optional<ChatRoom> findByPostAndHostAndGuest(Post post, User host, User guest);
+    
+    /**
+     * 특정 채팅방 ID로 게시물 ID 조회
+     * 
+     * @param chatRoomId 채팅방 ID
+     * @return 채팅방에 연결된 게시물 ID
+     */
+    @Query("SELECT cr.post.id FROM ChatRoom cr WHERE cr.id = :chatRoomId")
+    Long findPostIdByChatRoomId(@Param("chatRoomId") Long chatRoomId);
 }

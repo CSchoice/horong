@@ -3,6 +3,7 @@ package ssafy.horong.domain.education.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
+import ssafy.horong.domain.common.BaseEntity;
 
 import java.util.List;
 
@@ -13,10 +14,8 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Education {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class Education extends BaseEntity {
+    // id 필드는 BaseEntity에서 상속받음
 
     @Column(length = 20, nullable = false)
     private String word;

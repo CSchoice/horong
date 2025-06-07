@@ -3,8 +3,9 @@ package ssafy.horong.domain.member.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import ssafy.horong.common.crypto.StringEncryptConverter;
+import ssafy.horong.domain.common.BaseEntity;
 
-import java.time.LocalDateTime;
+
 
 /**
  * 사용자의 민감한 개인정보를 저장하는 엔티티
@@ -13,13 +14,10 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "user_sensitive_info")
-public class UserSensitiveInfo {
+public class UserSensitiveInfo extends BaseEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    // id 필드는 BaseEntity에서 상속받음
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
@@ -50,10 +48,7 @@ public class UserSensitiveInfo {
     @Column(length = 255)
     private String birthDate;
 
-    @Column(nullable = false)
-    private LocalDateTime createdAt;
-
-    private LocalDateTime updatedAt;
+    // createdAt, updatedAt, deletedAt 필드는 BaseEntity에서 상속받음
 
     @Builder
     public UserSensitiveInfo(User user, String phoneNumber, String email, String address, String detailAddress, String birthDate) {
@@ -63,7 +58,7 @@ public class UserSensitiveInfo {
         this.address = address;
         this.detailAddress = detailAddress;
         this.birthDate = birthDate;
-        this.createdAt = LocalDateTime.now();
+        // createdAt은 BaseEntity에서 처리됨
     }
 
     /**
@@ -75,6 +70,6 @@ public class UserSensitiveInfo {
         if (address != null) this.address = address;
         if (detailAddress != null) this.detailAddress = detailAddress;
         if (birthDate != null) this.birthDate = birthDate;
-        this.updatedAt = LocalDateTime.now();
+        // updatedAt은 BaseEntity에서 처리됨
     }
 }
