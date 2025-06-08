@@ -2,23 +2,17 @@ package ssafy.horong.domain.member.common;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import ssafy.horong.domain.common.BaseEntity;
 import ssafy.horong.domain.member.entity.User;
-
-import java.time.LocalDateTime;
 
 @Getter
 @Builder
 @Entity
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@EntityListeners(AuditingEntityListener.class)
-public class PasswordHistory {
+public class PasswordHistory extends BaseEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    // id 필드는 BaseEntity에서 상속받음
 
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "user_id", nullable = false)
@@ -27,16 +21,10 @@ public class PasswordHistory {
     @Column(nullable = false)
     private String password;
 
-    @CreatedDate
-    @Column(updatable = false, nullable = false)
-    private LocalDateTime updatedAt;
+    // createdAt, updatedAt, deletedAt 필드는 BaseEntity에서 상속받음
 
-    public void PasswordHistory(User user, String password) {
+    public void setPasswordHistory(User user, String password) {
         this.user = user;
         this.password = password;
-    }
-    @PrePersist
-    public void prePersist() {
-        this.updatedAt = LocalDateTime.now();
     }
 }

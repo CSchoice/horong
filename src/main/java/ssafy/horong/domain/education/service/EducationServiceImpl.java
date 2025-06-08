@@ -60,7 +60,6 @@ public class EducationServiceImpl implements EducationService {
                             .user(currentUser)
                             .wordIds(new ArrayList<>())
                             .day(newDayValue)
-                            .createdAt(LocalDateTime.now())
                             .build();
 
                     return educationDayRepository.save(newEducationDay);
@@ -254,7 +253,6 @@ public class EducationServiceImpl implements EducationService {
                             .user(currentUser)
                             .wordIds(new ArrayList<>())  // 초기 빈 단어 목록
                             .day(newDayValue)
-                            .createdAt(LocalDateTime.now())
                             .build();
 
                     // 새로 생성한 객체를 저장하고 반환

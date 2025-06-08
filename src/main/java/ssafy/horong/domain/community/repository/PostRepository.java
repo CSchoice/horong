@@ -13,13 +13,17 @@ import jakarta.persistence.LockModeType;
 import java.util.List;
 import java.util.Optional;
 
-public interface BoardRepository extends JpaRepository<Post, Long> {
+public interface PostRepository extends JpaRepository<Post, Long> {
     Page<Post> findByType(BoardType type, Pageable pageable);
     
     // 삭제되지 않은 게시글만 조회
     Page<Post> findByTypeAndDeletedAtIsNull(BoardType type, Pageable pageable);
     
     List<Post> findByTypeOrderByCreatedAtDesc(BoardType boardType, Pageable pageable);
+    
+    // 모든 활성화된 게시물 조회
+    @Query("SELECT p FROM Post p WHERE p.deletedAt IS NULL")
+    List<Post> findAllActivePost();
     
     // N+1 문제 해결을 위한 조인 쿼리
     @Query("SELECT p FROM Post p LEFT JOIN FETCH p.author LEFT JOIN FETCH p.contentByCountries " +

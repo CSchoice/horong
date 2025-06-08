@@ -2,7 +2,8 @@ package ssafy.horong.domain.community.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.Cacheable;
+import org.jsoup.Jsoup;
+import org.jsoup.safety.Safelist;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -10,8 +11,8 @@ import org.springframework.web.multipart.MultipartFile;
 import ssafy.horong.api.community.request.ContentImageRequest;
 import ssafy.horong.api.community.request.CreateContentByLanguageRequest;
 import ssafy.horong.api.community.response.*;
-import ssafy.horong.common.exception.board.*;
-import ssafy.horong.common.util.NotificationSseUtil;
+import ssafy.horong.common.exception.Board.*;
+import ssafy.horong.common.util.NotificationUtil;
 import ssafy.horong.common.util.S3Util;
 import ssafy.horong.common.util.SecurityUtil;
 import ssafy.horong.common.util.UserUtil;
@@ -27,8 +28,6 @@ import ssafy.horong.domain.member.repository.UserRepository;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -41,28 +40,17 @@ import static ssafy.horong.domain.community.entity.ContentByLanguage.ContentType
 @Transactional(readOnly = true)
 public class CommunityServiceImpl implements CommunityService {
 
-    // 상수 정의
-    private static final String COMMUNITY_PATH = "community/";
-    private static final String ERROR_MESSAGE_POST_NOT_FOUND = "Post content not found";
-    private static final String DELETED_COMMENT_AUTHOR = "deleted";
-    private static final String DELETED_COMMENT_CONTENT = "삭제된 댓글입니다.";
-    private static final int PROFILE_IMAGE_TIMEOUT_MS = 500;
-    private static final int CONTENT_MAX_LENGTH = 255;
-    private static final int NOTICE_POST_LIMIT = 3;
-    private static final int FREE_POST_LIMIT = 6;
-    private static final int REGIONAL_POST_LIMIT = 1;
-
-    private final BoardRepository postRepository;
+    private final PostRepository postRepository;
     private final CommentRepository commentRepository;
     private final UserRepository userRepository;
     private final MessageRepository messageRepository;
     private final PostElasticsearchRepository postElasticsearchRepository;
     private final NotificationRepository notificationRepository;
-    private final NotificationSseUtil notificationSseUtil;
+    private final NotificationUtil notificationUtil;
     private final S3Util s3Util;
     private final ContentImageRepository contentImageRepository;
     private final ContentByCountryRepository contentByLanguageRepository;
-    private final MessageRoomRepository messageRoomRepository;
+    private final ChatRoomRepository chatRoomRepository;
     private final UserUtil userUtil;
 
     @Transactional
@@ -89,7 +77,7 @@ public class CommunityServiceImpl implements CommunityService {
     @Transactional
     public void updatePost(UpdatePostCommand command) {
         validatePostCreateRequest(command.content());
-        Post post = postRepository.findByIdWithPessimisticLock(command.postId())
+        Post post = postRepository.findById(command.postId())
                 .orElseThrow(PostNotFoundException::new);
 
         Map<Language, ContentByLanguage> titleContentMap = mapContentByLanguage(post, TITLE);
@@ -193,14 +181,14 @@ public class CommunityServiceImpl implements CommunityService {
 
     @Transactional
     @Override
-    public MessageRoom createMessageRoom(Long userId, Long postId) {
-        MessageRoom messageRoom = MessageRoom.builder()
+    public ChatRoom createChatRoom(Long userId, Long postId) {
+        ChatRoom chatRoom = ChatRoom.builder()
                 .host(userUtil.getCurrentUser())
                 .post(postRepository.findById(postId).orElseThrow(PostNotFoundException::new))
                 .guest(userRepository.findById(userId).orElseThrow(null))
                 .build();
-        messageRoomRepository.save(messageRoom);
-        return messageRoom;
+        chatRoomRepository.save(chatRoom);
+        return chatRoom;
     }
 
     @Transactional
@@ -239,7 +227,7 @@ public class CommunityServiceImpl implements CommunityService {
 
         // 메시지 객체 생성 및 저장
         Message message = Message.builder()
-                .messageRoom(messageRoomRepository.findById(command.messageRoomId()).orElseThrow(MessageRoomNotFoundException::new))
+                .chatRoom(chatRoomRepository.findById(command.chatRoomId()).orElseThrow(ChatRoomNotFoundException::new))
                 .contentByCountries(contentByCountries)
                 .user(userUtil.getCurrentUser())
                 .build();
@@ -249,7 +237,7 @@ public class CommunityServiceImpl implements CommunityService {
         messageRepository.save(message);
 
         // 수신자에게 알림 전송
-        User receiver = message.getMessageRoom().getOpponent(userUtil.getCurrentUser());
+        User receiver = message.getChatRoom().getOpponent(userUtil.getCurrentUser());
         if (command.contentsByLanguages() != null) {
             notifyByMessageUser(receiver, "메시지가 도착했습니다: " + command.contentsByLanguages().get(0).content(), Notification.NotificationType.MESSAGE, message);
             log.info("메시지 전송: {}", receiver.getNickname());
@@ -260,43 +248,41 @@ public class CommunityServiceImpl implements CommunityService {
 
     @Override
     public List<GetAllMessageListResponse> getAllMessageList() {
-        Long userId = userUtil.getCurrentUser().getId();
-        List<MessageRoomInfo> messageRoomInfos = messageRoomRepository.findAllMessageRoomInfoByUserId(userId);
-        
-        return messageRoomInfos.stream()
-            .map(info -> {
-                // 각 채팅방의 최신 메시지 1개만 조회
-                Page<Message> latestMessages = messageRepository.findLatestMessageByRoomId(
-                    info.getRoomId(), PageRequest.of(0, 1, Sort.by(Sort.Direction.DESC, "createdAt")));
-                
-                Message lastMessage = latestMessages.isEmpty() ? null : latestMessages.getContent().get(0);
-                String lastContent = "";
-                if (lastMessage != null) {
-                    lastContent = getContentByLanguage(lastMessage.getContentByCountries(), userUtil.getCurrentUser().getLanguage());
-                }
-                
-                long unreadCount = messageRepository.countUnreadMessagesForOpponent(info.getRoomId(), userId);
-                
-                return new GetAllMessageListResponse(
-                    info.getRoomId(),
-                    unreadCount,
-                    lastContent,
-                    info.getOpponentNickname(),
-                    info.getOpponentId(),
-                    s3Util.getProfilePresignedUrlFromS3(info.getOpponentProfileImg()),
-                    lastMessage != null ? lastMessage.getCreatedAt().toString() : "",
-                    info.getPostId()
-                );
-            })
-            .sorted(Comparator.comparing(GetAllMessageListResponse::createdAt).reversed())
-            .toList();
+        List<ChatRoom> chatRooms = chatRoomRepository.findAllByUser(userUtil.getCurrentUser());
+        log.info("모든 채팅방 조회: {}", chatRooms);
+
+        return chatRooms.stream()
+                .map(chatRoom -> {
+                    User opponent = chatRoom.getOpponent(userUtil.getCurrentUser());
+                    List<Message> messages = chatRoom.getMessages();
+
+                    long unreadCount = messageRepository.countUnreadMessagesForOpponent(chatRoom, userUtil.getCurrentUser());
+
+                    messages.sort(Comparator.comparing(Message::getCreatedAt).reversed());
+
+                    Message lastMessage = messages.get(0);
+                    String lastContent = getContentByLanguage(lastMessage.getContentByCountries(), userUtil.getCurrentUser().getLanguage());
+
+                    return new GetAllMessageListResponse(
+                            chatRoom.getId(),
+                            unreadCount,
+                            lastContent,
+                            opponent.getNickname(),
+                            opponent.getId(),
+                            s3Util.getProfilePresignedUrlFromS3(opponent.getProfileImg()),
+                            lastMessage.getCreatedAt().toString(),
+                            chatRoom.getPost().getId()
+                    );
+                })
+                .sorted(Comparator.comparing(GetAllMessageListResponse::createdAt).reversed())
+                .toList();
     }
 
     @Transactional
     @Override
     public GetPostIdAndMessageListResponse getMessageList(GetMessageListCommand command) {
-        List<Message> messages = messageRepository.findAllByMessageRoomId(command.roomId());
-        Long postId = messageRoomRepository.findPostIdByMessageRoomId(command.roomId());
+        List<Message> messages = messageRepository.findAllByChatRoomId(command.roomId());
+        Long postId = chatRoomRepository.findPostIdByChatRoomId(command.roomId());
         User user = userUtil.getCurrentUser();
         Language userLanguage = user.getLanguage();
 
@@ -326,7 +312,7 @@ public class CommunityServiceImpl implements CommunityService {
                 })
                 .toList();
 
-        Long opponent = messageRepository.findOpponentIdByMessageRoomIdAndUserId(command.roomId(), user.getId());
+        Long opponent = messageRepository.findOpponentIdByChatRoomIdAndUserId(command.roomId(), user.getId());
 
         return GetPostIdAndMessageListResponse.of(postId, opponent, messageList);
     }
@@ -365,33 +351,49 @@ public class CommunityServiceImpl implements CommunityService {
     public Page<GetPostResponse> getPostList(Pageable pageable, String boardType) {
         log.info("모든 게시글 조회 (페이지네이션)");
 
-        // 정렬 조건을 포함한 페이지네이션
+        // 1. 데이터베이스에서 정렬을 처리하도록 Pageable에 정렬 조건 추가
         Pageable sortedPageable = PageRequest.of(
                 pageable.getPageNumber(),
                 pageable.getPageSize(),
                 Sort.by(Sort.Direction.DESC, "createdAt")
         );
-        
-        // 삭제되지 않은 게시글만 DB에서 필터링하여 조회
-        Page<Post> postPage = postRepository.findByTypeAndDeletedAtIsNull(BoardType.valueOf(boardType), sortedPageable);
-        
-        // map을 사용해 Page 객체 변환
-        return postPage.map(post -> {
-            String content = getContentByLanguage(post, userUtil.getCurrentUser().getLanguage(), CONTENT);
-            String title = getContentByLanguage(post, userUtil.getCurrentUser().getLanguage(), TITLE);
-            
-            // 댓글 정보는 포함하지 않고 필요시 별도 API로 조회
-            return new GetPostResponse(
-                    post.getId(),
-                    title,
-                    post.getAuthor().getNickname(),
-                    post.getAuthor().getId(),
-                    content,
-                    post.getCreatedAt().toString(),
-                    Collections.emptyList(), // 댓글은 별도 조회
-                    s3Util.getProfilePresignedUrlFromS3(post.getAuthor().getProfileImg())
-            );
-        });
+
+        // 2. 데이터베이스에서 게시글 목록을 가져옴 (필터링은 DB에서 처리할 수도 있음)
+        Page<Post> postPage = postRepository.findByType(BoardType.valueOf(boardType), sortedPageable);
+
+        // 현재 사용자의 언어 가져오기
+        Language language = userUtil.getCurrentUser().getLanguage();
+
+        // 3. 스트림을 사용해 각 게시글을 GetPostResponse로 변환
+        List<GetPostResponse> postResponses = postPage.getContent().stream()
+                .filter(post -> post.getDeletedAt() == null)  // 삭제되지 않은 게시글만 필터링
+                .map(post -> {
+                    String content = getContentByLanguage(post, language, CONTENT);
+                    String title = getContentByLanguage(post, language, TITLE);
+
+                    // 댓글도 정렬해서 변환
+                    List<GetCommentResponse> commentResponses = convertToCommentResponse(
+                            post.getComments().stream()
+                                    .sorted(Comparator.comparing(Comment::getCreatedAt).reversed())  // 댓글을 최신순으로 정렬
+                                    .toList()
+                    );
+
+                    // 4. S3에서 프로필 이미지를 가져오는 부분은 캐싱하거나 비동기 처리 고려 가능
+                    return new GetPostResponse(
+                            post.getId(),
+                            title,
+                            post.getAuthor().getNickname(),
+                            post.getAuthor().getId(),
+                            content,
+                            post.getCreatedAt().toString(),
+                            commentResponses,
+                            s3Util.getProfilePresignedUrlFromS3(post.getAuthor().getProfileImg())
+                    );
+                })
+                .toList();
+
+        // 5. PageImpl로 반환 (총 게시글 수 포함)
+        return new PageImpl<>(postResponses, sortedPageable, postPage.getTotalElements());
     }
 
     @Override
@@ -399,69 +401,55 @@ public class CommunityServiceImpl implements CommunityService {
         String keyword = command.keyword();
         log.info("Elasticsearch 검색 시작: keyword={}", keyword);
 
-        // 불필요한 빈 검색어 제거
-        String[] filteredTerms = Arrays.stream(keyword.split("\\s+"))
-            .filter(term -> !term.isBlank())
-            .toArray(String[]::new);
-        
-        if (filteredTerms.length == 0) {
-            return Page.empty(pageable);
-        }
+        String[] terms = keyword.split("\\s+");
+        String userLanguage = userUtil.getCurrentUser().getLanguage().name();
 
-        // 검색 실행
-        Set<PostDocument> uniqueDocuments = new HashSet<>();
-        for (String term : filteredTerms) {
-            uniqueDocuments.addAll(postElasticsearchRepository.findByTitleKoOrTitleZhOrTitleJaOrTitleEnOrAuthorOrContentKoOrContentZhOrContentJaOrContentEn(
-                term, term, term, term, term, term, term, term, term
-            ));
-        }
-        
-        log.info("Elasticsearch 검색 결과: {}", uniqueDocuments.size());
-        
+        Set<PostDocument> uniqueDocuments = Arrays.stream(terms)
+                .flatMap(term -> postElasticsearchRepository.findByTitleKoOrTitleZhOrTitleJaOrTitleEnOrAuthorOrContentKoOrContentZhOrContentJaOrContentEn(
+                        term, term, term, term, term, term, term, term, term
+                ).stream())
+                .collect(Collectors.toSet());
+
+        log.info("Elasticsearch 검색 결과: {}", uniqueDocuments);
+
         List<GetPostResponse> postResponses = uniqueDocuments.stream()
-            .map(doc -> {
-                Post post = postRepository.findById(doc.getPostId()).orElse(null);
-                if (post == null || post.getDeletedAt() != null) {
-                    return null;
-                }
-                
-                return convertPostDocumentToResponse(doc, post);
-            })
-            .filter(Objects::nonNull)
-            .toList();
-        
+                .map(postDocument -> {
+                    String content = getContentByUserLanguage(postDocument, userLanguage, false);
+                    String title = getContentByUserLanguage(postDocument, userLanguage, true);
+
+                    Post post = postRepository.findById(postDocument.getPostId()).orElse(null);
+                    String createdAt = post != null ? post.getCreatedAt().toString() : "";
+
+                    User author = userRepository.findByNicknameAndIsDeletedFalse(postDocument.getAuthor()).orElse(null);
+
+                    return new GetPostResponse(
+                            postDocument.getPostId(),
+                            title,
+                            postDocument.getAuthor(),
+                            author != null ? author.getId() : null,
+                            content,
+                            createdAt,
+                            List.of(),
+                            s3Util.getProfilePresignedUrlFromS3(post.getAuthor().getProfileImg())
+                    );
+                })
+                .sorted(Comparator.comparing(GetPostResponse::createdAt).reversed())
+                .toList();
+
         return new PageImpl<>(postResponses, pageable, uniqueDocuments.size());
     }
-    
-    private GetPostResponse convertPostDocumentToResponse(PostDocument doc, Post post) {
-        String userLanguage = userUtil.getCurrentUser().getLanguage().name();
-        String content = getContentByUserLanguage(doc, userLanguage, false);
-        String title = getContentByUserLanguage(doc, userLanguage, true);
-        
-        return new GetPostResponse(
-            doc.getPostId(),
-            title,
-            doc.getAuthor(),
-            post.getAuthor().getId(),
-            content,
-            post.getCreatedAt().toString(),
-            Collections.emptyList(), // 댓글은 필요시 별도 조회
-            s3Util.getProfilePresignedUrlFromS3(post.getAuthor().getProfileImg())
-        );
-    }
 
-    @Cacheable(value = "mainPostList", key = "#userUtil.getCurrentUser().getLanguage()", cacheManager = "redisCacheManager")
     public Map<BoardType, List<GetPostResponse>> getMainPostList() {
-        log.info("게시판별 게시글 리스트 조회 - 캐시 미스");
-        
-        Map<BoardType, List<GetPostResponse>> mainPostList = new EnumMap<>(BoardType.class);
+        log.info("게시판별 게시글 리스트 조회");
 
-        mainPostList.put(BoardType.NOTICE, getPostsByBoardType(BoardType.NOTICE, NOTICE_POST_LIMIT));
-        mainPostList.put(BoardType.FREE, getPostsByBoardType(BoardType.FREE, FREE_POST_LIMIT));
-        mainPostList.put(BoardType.SEOUL, getPostsByBoardType(BoardType.SEOUL, REGIONAL_POST_LIMIT));
-        mainPostList.put(BoardType.BUSAN, getPostsByBoardType(BoardType.BUSAN, REGIONAL_POST_LIMIT));
-        mainPostList.put(BoardType.INCHEON, getPostsByBoardType(BoardType.INCHEON, REGIONAL_POST_LIMIT));
-        mainPostList.put(BoardType.GYEONGGI, getPostsByBoardType(BoardType.GYEONGGI, REGIONAL_POST_LIMIT));
+        Map<BoardType, List<GetPostResponse>> mainPostList = new HashMap<>();
+
+        mainPostList.put(BoardType.NOTICE, getPostsByBoardType(BoardType.NOTICE, 3));
+        mainPostList.put(BoardType.FREE, getPostsByBoardType(BoardType.FREE, 6));
+        mainPostList.put(BoardType.SEOUL, getPostsByBoardType(BoardType.SEOUL, 1));
+        mainPostList.put(BoardType.BUSAN, getPostsByBoardType(BoardType.BUSAN, 1));
+        mainPostList.put(BoardType.INCHEON, getPostsByBoardType(BoardType.INCHEON, 1));
+        mainPostList.put(BoardType.GYEONGGI, getPostsByBoardType(BoardType.GYEONGGI, 1));
 
         return mainPostList;
     }
@@ -529,68 +517,51 @@ public class CommunityServiceImpl implements CommunityService {
         log.info("특정 게시판 타입별 게시글 조회: {}", boardType);
 
         Language language = userUtil.getCurrentUser().getLanguage();
-        
-        Pageable pageable = PageRequest.of(0, limit);
-        List<Post> posts = postRepository.findByTypeWithAuthorAndContent(boardType, pageable);
-        
-        return posts.parallelStream()
-            .filter(post -> post.getDeletedAt() == null)
-            .map(post -> {
-                String content = getContentByLanguage(post, language, CONTENT);
-                String title = getContentByLanguage(post, language, TITLE);
-                
-                // 비동기로 프로필 이미지 URL 가져오기
-                CompletableFuture<String> profileImageFuture = CompletableFuture.supplyAsync(() -> 
-                    s3Util.getProfilePresignedUrlFromS3(post.getAuthor().getProfileImg())
-                );
-                
-                try {
-                    // 결과 사용 시점에서 대기
-                    String profileUrl = profileImageFuture.get(PROFILE_IMAGE_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-                    return new GetPostResponse(
-                        post.getId(), title, post.getAuthor().getNickname(), post.getAuthor().getId(),
-                        content, post.getCreatedAt().toString(), Collections.emptyList(), profileUrl
+
+        Pageable pageable = PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "createdAt"));
+
+        List<Post> posts = postRepository.findByTypeOrderByCreatedAtDesc(boardType, pageable);
+        log.info("{} 게시판에서 가져온 초기 게시글 개수: {}", boardType, posts.size());
+
+        return posts.stream()
+                .filter(post -> post.getDeletedAt() == null)
+                .map(post -> {
+                    String content = getContentByLanguage(post, language, CONTENT);
+                    String title = getContentByLanguage(post, language, TITLE);
+
+                    List<GetCommentResponse> commentResponses = convertToCommentResponse(
+                            post.getComments().stream().sorted(Comparator.comparing(Comment::getCreatedAt).reversed()).toList()
                     );
-                } catch (InterruptedException e) {
-                    log.warn("프로필 이미지 로딩 중 인터럽트 발생", e);
-                    Thread.currentThread().interrupt(); // 인터럽트 상태 복원
+
                     return new GetPostResponse(
-                        post.getId(), title, post.getAuthor().getNickname(), post.getAuthor().getId(),
-                        content, post.getCreatedAt().toString(), Collections.emptyList(), null
+                            post.getId(),
+                            title,
+                            post.getAuthor().getNickname(),
+                            post.getAuthor().getId(),
+                            content,
+                            post.getCreatedAt().toString(),
+                            commentResponses,
+                            s3Util.getProfilePresignedUrlFromS3(post.getAuthor().getProfileImg())
                     );
-                } catch (Exception e) {
-                    log.warn("프로필 이미지 로딩 실패", e);
-                    return new GetPostResponse(
-                        post.getId(), title, post.getAuthor().getNickname(), post.getAuthor().getId(),
-                        content, post.getCreatedAt().toString(), Collections.emptyList(), null
-                    );
-                }
-            })
-            .toList();
+                })
+                .sorted(Comparator.comparing(GetPostResponse::createdAt).reversed())
+                .toList();
     }
 
     public String saveImageToS3(MultipartFile file) {
         return s3Util.uploadToS3(file, UUID.randomUUID().toString(), "community/");
     }
 
-    // 정규식 기반 HTML 태그 제거 (간단한 경우)
-    private String stripHtml(String html) {
-        if (html == null) return null;
-        return html.replaceAll("<[^>]*>", "");
-    }
-
-    // 성능 개선된 검증 메서드
     public void validatePostCreateRequest(List<CreateContentByLanguageRequest> contents) {
         for (CreateContentByLanguageRequest request : contents) {
-            String rawContent = Optional.ofNullable(request.content()).orElse("");
-            String plainText = stripHtml(rawContent);
+            String safeContent = Jsoup.clean(request.content(), Safelist.none());
+            String plainText = escapeHtml(safeContent);
 
-            if (plainText.length() > CONTENT_MAX_LENGTH) {
-                throw new ContentTooLongException();
+            if (plainText.length() > 255) {
+                throw new ContentTooLongExeption();
             }
         }
     }
-
 
     private String escapeHtml(String input) {
         if (input == null) return null;
@@ -621,7 +592,7 @@ public class CommunityServiceImpl implements CommunityService {
     private void validateAdminForNotice(BoardType boardType) {
         if (boardType == BoardType.NOTICE &&
                 SecurityUtil.getLoginMemberRole().orElse(MemberRole.USER) != MemberRole.ADMIN) {
-            throw new NotAdminException();
+            throw new NotAdminExeption();
         }
     }
 
@@ -633,9 +604,9 @@ public class CommunityServiceImpl implements CommunityService {
                     if (comment.getDeletedAt() != null) {
                         return new GetCommentResponse(
                                 null,
-                                DELETED_COMMENT_AUTHOR,
+                                "deleted",
                                 null,
-                                DELETED_COMMENT_CONTENT,
+                                "삭제된 댓글입니다.",
                                 null,
                                 null
                         );
@@ -655,52 +626,67 @@ public class CommunityServiceImpl implements CommunityService {
                 .toList();
     }
 
+    private static final String KOREAN = "KOREAN";
+    private static final String CHINESE = "CHINESE";
+    private static final String JAPANESE = "JAPANESE";
+    private static final String ENGLISH = "ENGLISH";
+
     private void savePostDocument(Post post, List<CreateContentByLanguageRequest> contentByCountries) {
-        PostDocument postDocument = postElasticsearchRepository.findById(String.valueOf(post.getId()))
-                .orElse(PostDocument.builder()
-                        .postId(post.getId())
-                        .author(post.getAuthor().getNickname())
-                        .authorId(post.getAuthor().getId())
-                        .build());
+        try {
+            log.info("Elasticsearch에 게시물 저장 시작: postId={}", post.getId());
+            
+            PostDocument postDocument = postElasticsearchRepository.findById(String.valueOf(post.getId()))
+                    .orElse(PostDocument.builder()
+                            .postId(post.getId())
+                            .author(post.getAuthor().getNickname())
+                            .authorId(post.getAuthor().getId())
+                            .build());
 
-        contentByCountries.forEach(contentByLanguage -> {
-            if (contentByLanguage.language() == null) {
-                return;
-            }
-            String language = contentByLanguage.language().name();
+            contentByCountries.forEach(contentByLanguage -> {
+                if (contentByLanguage.language() == null) {
+                    log.warn("language가 null인 콘텐츠 발견: postId={}", post.getId());
+                    return;
+                }
+                
+                String language = contentByLanguage.language().name();
+                
+                try {
+                    switch (language) {
+                        case KOREAN -> {
+                            postDocument.setTitleKo(contentByLanguage.title());
+                            postDocument.setContentKo(contentByLanguage.content());
+                        }
+                        case CHINESE -> {
+                            postDocument.setTitleZh(contentByLanguage.title());
+                            postDocument.setContentZh(contentByLanguage.content());
+                        }
+                        case JAPANESE -> {
+                            postDocument.setTitleJa(contentByLanguage.title());
+                            postDocument.setContentJa(contentByLanguage.content());
+                        }
+                        case ENGLISH -> {
+                            postDocument.setTitleEn(contentByLanguage.title());
+                            postDocument.setContentEn(contentByLanguage.content());
+                        }
+                        default -> throw new IllegalArgumentException("Unsupported language: " + language);
+                    }
+                } catch (IllegalArgumentException e) {
+                    log.warn("지원하지 않는 언어 처리 중 오류: {}", e.getMessage());
+                }
+            });
 
-            switch (language) {
-                case "KOREAN" -> {
-                    postDocument.setTitleKo(contentByLanguage.title());
-                    postDocument.setContentKo(contentByLanguage.content());
-                }
-                case "CHINESE" -> {
-                    postDocument.setTitleZh(contentByLanguage.title());
-                    postDocument.setContentZh(contentByLanguage.content());
-                }
-                case "JAPANESE" -> {
-                    postDocument.setTitleJa(contentByLanguage.title());
-                    postDocument.setContentJa(contentByLanguage.content());
-                }
-                case "ENGLISH" -> {
-                    postDocument.setTitleEn(contentByLanguage.title());
-                    postDocument.setContentEn(contentByLanguage.content());
-                }
-                default -> {
-                    throw new IllegalArgumentException("Unsupported language: " + language);
-                }
-            }
-        });
-
-        postElasticsearchRepository.save(postDocument);
+            postElasticsearchRepository.save(postDocument);
+            log.info("Elasticsearch에 게시물 저장 완료: postId={}", post.getId());
+        } catch (Exception e) {
+            // 예외 발생 시 로그만 기록하고 애플리케이션 실행은 계속함
+            log.error("Elasticsearch에 게시물 저장 중 오류 발생: postId={}, 오류={}", post.getId(), e.getMessage(), e);
+        }
     }
 
     private List<ContentImage> extractContentImages(List<ContentImageRequest> imageRequests) {
         return imageRequests.stream()
                 .map(ContentImageRequest::imageUrl)
-                .map(imageUrl -> {
-                    return imageUrl.substring(imageUrl.indexOf(COMMUNITY_PATH));
-                })
+                .map(imageUrl -> imageUrl.substring(imageUrl.indexOf("community/")))
                 .map(trimmedUrl -> ContentImage.builder().imageUrl(trimmedUrl).build())
                 .toList();
     }
@@ -708,9 +694,7 @@ public class CommunityServiceImpl implements CommunityService {
     private List<ContentImage> extractMessageContentImages(List<ContentImageRequest> imageRequests) {
         return imageRequests.stream()
                 .map(ContentImageRequest::imageUrl)
-                .map(imageUrl -> {
-                    return imageUrl.substring(imageUrl.indexOf(COMMUNITY_PATH));
-                })
+                .map(imageUrl -> imageUrl.substring(imageUrl.indexOf("community/")))
                 .map(trimmedUrl -> ContentImage.builder().imageUrl(trimmedUrl).build())
                 .toList();
     }
@@ -777,9 +761,7 @@ public class CommunityServiceImpl implements CommunityService {
             if (existingMainContent != null) {
                 List<ContentImage> existingImages = existingMainContent.getContentImages();
                 List<String> newImageUrls = command.contentImageRequest().stream()
-                        .map(imageRequest -> {
-                            return imageRequest.imageUrl().substring(imageRequest.imageUrl().indexOf(COMMUNITY_PATH));
-                        })
+                        .map(imageRequest -> imageRequest.imageUrl().substring(imageRequest.imageUrl().indexOf("community/")))
                         .toList();
 
                 existingImages.removeIf(image -> !newImageUrls.contains(image.getImageUrl()));
@@ -804,9 +786,8 @@ public class CommunityServiceImpl implements CommunityService {
                     .receiver(receiver)
                     .sender(userUtil.getCurrentUser())
                     .messageContent(messageContent)
-                    .Post(post)
+                    .post(post)
                     .isRead(false)
-                    .createdAt(LocalDateTime.now())
                     .type(type)
                     .build();
             notificationRepository.save(notification);
@@ -818,7 +799,7 @@ public class CommunityServiceImpl implements CommunityService {
             List<NotificationResponse> notificationDTOs = NotificationResponse.convertToNotificationDTOs(combinedNotifications, receiver.getLanguage());
 
             // 사용자에게 DTO로 알림 전송
-            notificationSseUtil.sendNotificationToUser(notificationDTOs, receiver.getId());
+            notificationUtil.sendNotificationToUser(notificationDTOs, receiver.getId());
 
             // 로그 출력
             log.info("알림 목록 전송: {}", notificationDTOs);
@@ -832,9 +813,8 @@ public class CommunityServiceImpl implements CommunityService {
                     .receiver(receiver)
                     .sender(userUtil.getCurrentUser())
                     .messageContent(messageContent)
-                    .Message(message)
+                    .message(message)
                     .isRead(false)
-                    .createdAt(LocalDateTime.now())
                     .type(type)
                     .build();
             notificationRepository.save(notification);
@@ -846,7 +826,7 @@ public class CommunityServiceImpl implements CommunityService {
             List<NotificationResponse> notificationDTOs = NotificationResponse.convertToNotificationDTOs(combinedNotifications, receiver.getLanguage());
 
             // 사용자에게 DTO로 알림 전송
-            notificationSseUtil.sendNotificationToUser(notificationDTOs, receiver.getId());
+            notificationUtil.sendNotificationToUser(notificationDTOs, receiver.getId());
 
             // 로그 출력
             log.info("알림 목록 전송: {}", notificationDTOs);
@@ -855,7 +835,9 @@ public class CommunityServiceImpl implements CommunityService {
 
 
     private List<Notification> getCombinedNotifications(User receiver) {
-        return notificationRepository.findByReceiverAndIsReadFalse(receiver);
+        // 사용자의 읽지 않은 모든 알림을 가져옵니다.
+        List<Notification> unreadNotifications = notificationRepository.findByReceiverAndIsReadFalse(receiver);
+        return unreadNotifications;
     }
 
     private String getContentByLanguage(Post post, Language language, ContentByLanguage.ContentType contentType) {
@@ -863,7 +845,7 @@ public class CommunityServiceImpl implements CommunityService {
                 .filter(c -> c.getLanguage() == language && c.getContentType() == contentType)
                 .findFirst()
                 .map(ContentByLanguage::getContent)
-                .orElseThrow(() -> new PostNotFoundException(ERROR_MESSAGE_POST_NOT_FOUND));
+                .orElseThrow(PostNotFoundException::new);
     }
 
     private String getContentByLanguage(List<ContentByLanguage> contents, Language language) {

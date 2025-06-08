@@ -2,9 +2,8 @@ package ssafy.horong.domain.community.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import ssafy.horong.domain.common.BaseEntity;
 import ssafy.horong.domain.member.entity.User;
-
-import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -12,11 +11,10 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Notification {
+@EqualsAndHashCode(callSuper = true)
+public class Notification extends BaseEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    // id 필드는 BaseEntity에서 상속받음
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "receiver_id")
@@ -30,15 +28,15 @@ public class Notification {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id")
-    private Post Post;
+    private Post post;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "message_id")
-    private Message Message;
+    private Message message;
 
     private boolean isRead;
 
-    private LocalDateTime createdAt;
+    // createdAt 필드는 BaseEntity에서 상속받음
 
     @Enumerated(EnumType.STRING)
     private NotificationType type; // 알림 타입 (댓글, 메시지 등)

@@ -2,6 +2,7 @@ package ssafy.horong.domain.currency.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import ssafy.horong.domain.common.BaseEntity;
 
 import java.util.List;
 
@@ -11,11 +12,9 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder
-public class CurrencyExchange {
+public class CurrencyExchange extends BaseEntity {
 
-    @Id
-    @Column(name = "id", nullable = false)
-    private Long id;  // 크롤링한 ID 그대로 사용
+    // id 필드는 BaseEntity에서 상속받음
 
     @Column(name = "address", nullable = false, length = 255)
     private String address;  // 환전소 주소
