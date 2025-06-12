@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ssafy.horong.api.CommonResponse;
 import ssafy.horong.common.exception.global.AccessDeniedRequestException;
-import ssafy.horong.common.exception.User.InvalidLoginInfoException;
+import ssafy.horong.common.exception.user.InvalidLoginInfoException;
 
 @RestControllerAdvice
 @Slf4j

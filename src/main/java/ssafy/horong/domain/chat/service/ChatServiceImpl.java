@@ -9,7 +9,7 @@ import ssafy.horong.api.chat.response.HorongChatMessageResponse;
 import ssafy.horong.api.chat.response.HorongChatRoomListResponse;
 import ssafy.horong.api.chat.response.HorongChatRoomResponse;
 import ssafy.horong.api.kafka.producer.KafkaProducerService;
-import ssafy.horong.common.exception.User.MemberNotFoundException;
+import ssafy.horong.common.exception.user.MemberNotFoundException;
 import ssafy.horong.common.exception.horongChat.ChatRoomAccessDeniedException;
 import ssafy.horong.common.exception.security.NotAuthenticatedException;
 import ssafy.horong.common.util.SecurityUtil;

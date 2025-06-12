@@ -13,18 +13,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ssafy.horong.api.auth.request.TokenRefreshRequest;
 import ssafy.horong.api.auth.response.AuthResponse;
-import ssafy.horong.common.exception.User.PasswordNotMatchException;
+import ssafy.horong.common.exception.user.PasswordNotMatchException;
 import ssafy.horong.common.exception.token.TokenSaveFailedException;
-import ssafy.horong.common.util.JwtParser;
 import ssafy.horong.common.util.JwtProcessor;
 import ssafy.horong.domain.auth.command.LoginCommand;
 import ssafy.horong.domain.auth.model.DecodedJwtToken;
 import ssafy.horong.domain.auth.model.LoginToken;
-import ssafy.horong.domain.member.common.CustomUserDetails;
 import ssafy.horong.domain.member.common.MemberRole;
 import ssafy.horong.domain.member.entity.User;
 import ssafy.horong.domain.member.repository.UserRepository;
-import ssafy.horong.common.exception.User.*;
+import ssafy.horong.common.exception.user.*;
 
 import ssafy.horong.common.exception.security.*;
 

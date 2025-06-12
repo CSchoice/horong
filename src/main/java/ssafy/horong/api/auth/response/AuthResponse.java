@@ -2,7 +2,7 @@ package ssafy.horong.api.auth.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
-import ssafy.horong.common.exception.User.AbnormalLoginProgressException;
+import ssafy.horong.common.exception.user.AbnormalLoginProgressException;
 import ssafy.horong.domain.auth.model.UserInfo;
 
 @Schema(description = "인증 응답 DTO")

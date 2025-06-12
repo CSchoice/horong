@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ssafy.horong.api.member.response.*;
 import ssafy.horong.common.constant.global.S3Image;
-import ssafy.horong.common.exception.User.*;
+import ssafy.horong.common.exception.user.*;
 import ssafy.horong.common.exception.security.InvalidPasswordException;
 import ssafy.horong.common.exception.security.NotAuthenticatedException;
 import ssafy.horong.common.exception.security.PasswordUsedException;
